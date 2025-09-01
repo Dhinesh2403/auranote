@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+// import { Vibration } from '@awesome-cordova-plugins/vibration/ngx';
 
 @Component({
   selector: 'app-tab1',
@@ -8,6 +9,13 @@ import { Component } from '@angular/core';
 })
 export class Tab1Page {
 
-  constructor() {}
+  constructor(
+    // private vibration: Vibration
+  ) {}
+
+  vibrate() {
+    (window as any).navigator.vibrate(1000);
+  }
+
 
 }
