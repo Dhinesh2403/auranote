@@ -1,0 +1,103 @@
+name: Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build type (apk|aab|both)"
+        type: choice
+        required: true
+        default: both
+        options:
+          - apk
+          - aab
+          - both
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web assets
+        run: npm run build -- --configuration=production
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Decode keystore
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "Missing ANDROID_KEYSTORE_BASE64 secret" >&2
+            exit 1
+          fi
+          mkdir -p android/keystore
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/keystore/release.jks
+
+      - name: Build signed release
+        working-directory: android
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/keystore/release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          BUILD_TYPE: ${{ inputs.build_type || 'both' }}
+        run: |
+          set -e
+          if [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
+            echo "Missing signing secrets (ANDROID_KEYSTORE_PASSWORD/ANDROID_KEY_ALIAS/ANDROID_KEY_PASSWORD)" >&2
+            exit 1
+          fi
+
+          # Provide signing properties to Gradle via environment variables commonly used in android/app/build.gradle setups.
+          export ORG_GRADLE_PROJECT_storeFile="$ANDROID_KEYSTORE_PATH"
+          export ORG_GRADLE_PROJECT_storePassword="$ANDROID_KEYSTORE_PASSWORD"
+          export ORG_GRADLE_PROJECT_keyAlias="$ANDROID_KEY_ALIAS"
+          export ORG_GRADLE_PROJECT_keyPassword="$ANDROID_KEY_PASSWORD"
+
+          ./gradlew --no-daemon clean
+
+          if [ "$BUILD_TYPE" = "apk" ] || [ "$BUILD_TYPE" = "both" ]; then
+            ./gradlew --no-daemon :app:assembleRelease
+          fi
+
+          if [ "$BUILD_TYPE" = "aab" ] || [ "$BUILD_TYPE" = "both" ]; then
+            ./gradlew --no-daemon :app:bundleRelease
+          fi
+
+      - name: Upload APK/AAB artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: |
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error

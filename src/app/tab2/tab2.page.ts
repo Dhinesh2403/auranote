@@ -9,6 +9,9 @@ import { Component } from '@angular/core';
 })
 export class Tab2Page {
 
-  constructor() {}
+  constructor() {
+    console.log('tab 2 page demo');
+    
+  }
 
 }

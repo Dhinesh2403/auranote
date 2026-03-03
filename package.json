@@ -9,6 +9,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadlessCI --code-coverage",
+    "test:ci:once": "cross-env CI=true KARMA_BROWSER=ChromeHeadlessCI ng test --watch=false --code-coverage",
     "lint": "ng lint"
   },
   "private": true,
@@ -49,6 +51,7 @@
     "@types/jasmine": "~5.1.0",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.16.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsdoc": "^48.2.1",
