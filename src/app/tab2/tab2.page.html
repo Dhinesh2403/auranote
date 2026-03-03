@@ -1,37 +1,39 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Tab 2
-    </ion-title>
+    <ion-title>Reminders</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="createReminder()">New</ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Notifications</ion-card-title>
+      <ion-card-subtitle>Permission: {{ notificationPermission }}</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-button (click)="requestPermission()" expand="block">Request permission</ion-button>
+    </ion-card-content>
+  </ion-card>
 
-  <ion-list>
-    <ion-item>
-      <ion-input label="Default input"></ion-input>
-    </ion-item>
-  
-    <ion-item>
-      <ion-input label="Input with placeholder" placeholder="Enter company name"></ion-input>
-    </ion-item>
-  
-    <ion-item>
-      <ion-input label="Input with value" value="121 S Pinckney St #300"></ion-input>
-    </ion-item>
-  
-    <ion-item>
-      <ion-input label="Readonly input" value="Madison" [readonly]="true"></ion-input>
-    </ion-item>
-  
-    <ion-item>
-      <ion-input label="Disabled input" value="53703" [disabled]="true"></ion-input>
+  <ion-list *ngIf="reminders.length; else empty">
+    <ion-item *ngFor="let r of reminders">
+      <ion-label>
+        <h2>{{ r.title }}</h2>
+        <p>{{ formatWhen(r.at) }} • {{ formatRecurrence(r.recurrence) }}</p>
+        <p *ngIf="r.body">{{ r.body }}</p>
+      </ion-label>
+      <ion-button slot="end" fill="clear" color="danger" (click)="deleteReminder(r)">Delete</ion-button>
     </ion-item>
   </ion-list>
+
+  <ng-template #empty>
+    <ion-padding>
+      <h2>No reminders yet</h2>
+      <p>Create a reminder and choose recurrence (once/daily/weekly/monthly).</p>
+      <ion-button expand="block" (click)="createReminder()">Create reminder</ion-button>
+    </ion-padding>
+  </ng-template>
 </ion-content>

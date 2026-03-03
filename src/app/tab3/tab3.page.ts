@@ -1,5 +1,11 @@
 import { Component } from '@angular/core';
-import { LocalNotifications } from '@capacitor/local-notifications';
+
+type ChatMessage = {
+  id: string;
+  role: 'user' | 'agent';
+  text: string;
+  createdAt: number;
+};
 
 @Component({
   selector: 'app-tab3',
@@ -8,47 +14,45 @@ import { LocalNotifications } from '@capacitor/local-notifications';
   standalone: false,
 })
 export class Tab3Page {
+  messages: ChatMessage[] = [
+    {
+      id: crypto.randomUUID(),
+      role: 'agent',
+      text: 'Hi, I am Aura Agent. Ask me to draft a note or suggest a reminder.',
+      createdAt: Date.now(),
+    },
+  ];
 
-  constructor() {
-    this.registerListeners();
+  draft = '';
+
+  send() {
+    const text = this.draft.trim();
+    if (!text) return;
+
+    this.messages = [
+      ...this.messages,
+      { id: crypto.randomUUID(), role: 'user', text, createdAt: Date.now() },
+    ];
+    this.draft = '';
+
+    const reply = this.simpleReply(text);
+    this.messages = [
+      ...this.messages,
+      { id: crypto.randomUUID(), role: 'agent', text: reply, createdAt: Date.now() },
+    ];
   }
 
-  // Request notification permissions
-  async requestPermission() {
-    const permission = await LocalNotifications.requestPermissions();
-    if (permission.display === 'granted') {
-      console.log('Notification permission granted');
-    } else {
-      console.log('Notification permission denied');
+  private simpleReply(text: string) {
+    const t = text.toLowerCase();
+    if (t.includes('note')) {
+      return 'Tip: keep notes short with a clear title. You can create one in the Notes tab.';
     }
+    if (t.includes('remind') || t.includes('reminder')) {
+      return 'You can create reminders in the Reminders tab and pick recurrence: once, every day, every week, or every month.';
+    }
+    if (t.includes('hello') || t.includes('hi')) {
+      return 'Hello. What would you like to do: create a note or set a reminder?';
+    }
+    return 'I can help you plan notes/reminders. Try: "Create a reminder every day at 9".';
   }
-
-  // Schedule a notification
-  async scheduleNotification() {
-    await LocalNotifications.schedule({
-      notifications: [
-        {
-          id: 1,
-          title: 'Test Notification',
-          body: 'This is a test notification!',
-          schedule: { at: new Date(new Date().getTime() + 5000) }, // 5 seconds from now
-          actionTypeId: '',
-          extra: null,
-        },
-      ],
-    });
-    console.log('Notification scheduled');
-  }
-
-  // Register listeners for notification events
-  registerListeners() {
-    LocalNotifications.addListener('localNotificationReceived', (notification) => {
-      console.log('Notification received:', notification);
-    });
-
-    LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
-      console.log('Notification action performed:', notification);
-    });
-  }
-
 }

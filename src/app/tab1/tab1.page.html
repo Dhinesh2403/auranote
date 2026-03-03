@@ -1,18 +1,30 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Tab 1
-    </ion-title>
+    <ion-title>Notes</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="createNote()">New</ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
-  <ion-content>
-    <ion-button (click)="vibrate()">Vibrate for 2 Second</ion-button>
-  </ion-content>
+  <ion-list *ngIf="notes.length; else empty">
+    <ion-item button detail="false" *ngFor="let note of notes" (click)="editNote(note)">
+      <ion-label>
+        <h2>{{ note.title }}</h2>
+        <p>{{ note.content }}</p>
+      </ion-label>
+      <ion-button slot="end" fill="clear" color="danger" (click)="$event.stopPropagation(); deleteNote(note)">
+        Delete
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <ng-template #empty>
+    <ion-padding>
+      <h2>No notes yet</h2>
+      <p>Create your first note.</p>
+      <ion-button expand="block" (click)="createNote()">Create note</ion-button>
+    </ion-padding>
+  </ng-template>
 </ion-content>
