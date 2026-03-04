@@ -2,5 +2,6 @@
 
 (function () {
   window.__ENV = window.__ENV || {};
-  window.__ENV.GROQ_API_KEY = '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';
+  // Use a placeholder. Put your real key in env.local.js (gitignored).
+  window.__ENV.GROQ_API_KEY = 'gsk_REPLACE_ME';
 })();
