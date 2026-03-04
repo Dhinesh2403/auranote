@@ -71,3 +71,4 @@ Thumbs.db
 
 # Local runtime env (never commit secrets)
 src/assets/env.local.js
+src/assets/env.local.example.js
