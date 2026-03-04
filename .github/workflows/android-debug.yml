@@ -13,7 +13,7 @@ on:
           - debug-aab
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android-debug:
@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for git operations
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -60,11 +62,25 @@ jobs:
             ./gradlew --no-daemon :app:bundleDebug
           fi
 
-      - name: Upload debug artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-debug
-          path: |
-            android/app/build/outputs/apk/debug/*.apk
-            android/app/build/outputs/bundle/debug/*.aab
-          if-no-files-found: error
+      - name: Copy APK to apk folder
+        shell: bash
+        run: |
+          mkdir -p apk
+          if [ "${{ inputs.build_type }}" = "debug-apk" ]; then
+            cp android/app/build/outputs/apk/debug/*.apk apk/app-debug.apk
+          elif [ "${{ inputs.build_type }}" = "debug-aab" ]; then
+            cp android/app/build/outputs/bundle/debug/*.aab apk/app-debug.aab
+          fi
+
+      - name: Commit and push APK
+        shell: bash
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add apk/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Add debug APK/AAB from CI build"
+            git push
+          fi
