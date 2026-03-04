@@ -51,6 +51,11 @@ jobs:
         working-directory: android
         run: chmod +x gradlew
 
+      - name: Clear org.gradle.java.home override
+        working-directory: android
+        run: |
+          sed -i '/^org.gradle.java.home/d' gradle.properties || true
+
       - name: Build debug
         working-directory: android
         shell: bash
