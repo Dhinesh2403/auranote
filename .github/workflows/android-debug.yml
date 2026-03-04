@@ -1,0 +1,70 @@
+name: Android Debug (Testing)
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build type (debug-apk|debug-aab)"
+        type: choice
+        required: true
+        default: debug-apk
+        options:
+          - debug-apk
+          - debug-aab
+
+permissions:
+  contents: read
+
+jobs:
+  android-debug:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web assets
+        run: npm run build -- --configuration=production
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Build debug
+        working-directory: android
+        shell: bash
+        env:
+          BUILD_TYPE: ${{ inputs.build_type }}
+        run: |
+          set -e
+          ./gradlew --no-daemon clean
+
+          if [ "$BUILD_TYPE" = "debug-apk" ]; then
+            ./gradlew --no-daemon :app:assembleDebug
+          elif [ "$BUILD_TYPE" = "debug-aab" ]; then
+            ./gradlew --no-daemon :app:bundleDebug
+          fi
+
+      - name: Upload debug artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/bundle/debug/*.aab
+          if-no-files-found: error
