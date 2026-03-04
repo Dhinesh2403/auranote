@@ -1,8 +1,6 @@
-// Local dev runtime config example.
-// Copy this file to env.local.js and put your real key there.
-// IMPORTANT: env.local.js is gitignored (do not commit secrets).
+// Example local runtime config (DO NOT commit real secrets)
 
 (function () {
   window.__ENV = window.__ENV || {};
-  window.__ENV.GEMINI_API_KEY = 'AIzaSyD_t_rLacRU5lZFVjjdjMT_ZnvVSOSJVE8';
+  window.__ENV.GROQ_API_KEY = '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';
 })();

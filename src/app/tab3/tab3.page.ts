@@ -7,7 +7,7 @@ import { aiAgentParseToJson, type AuraAgentResult } from '../ai-agent';
 declare global {
   interface Window {
     __ENV?: {
-      GEMINI_API_KEY?: string;
+      GROQ_API_KEY?: string;
     };
   }
 }
@@ -59,6 +59,7 @@ export class Tab3Page {
 
   draft = '';
   private storageReady = false;
+  isSending = false;
 
   constructor(
     private alertCtrl: AlertController,
@@ -76,31 +77,39 @@ export class Tab3Page {
   }
 
   async send() {
+    if (this.isSending) return;
+
     const text = this.draft.trim();
     if (!text) return;
 
-    this.messages = [
-      ...this.messages,
-      { id: crypto.randomUUID(), role: 'user', text, createdAt: Date.now() },
-    ];
-    this.draft = '';
-
-    const apiKey = window.__ENV?.GEMINI_API_KEY;
-    if (!apiKey) {
-      this.messages = [
-        ...this.messages,
-        {
-          id: crypto.randomUUID(),
-          role: 'agent',
-          text: 'Gemini API key is not configured. Provide it at runtime via window.__ENV.GEMINI_API_KEY.',
-          createdAt: Date.now(),
-        },
-      ];
-      return;
-    }
+    this.isSending = true;
 
     try {
-      const parsed = await aiAgentParseToJson(text, { apiKey });
+      this.messages = [
+        ...this.messages,
+        { id: crypto.randomUUID(), role: 'user', text, createdAt: Date.now() },
+      ];
+      this.draft = '';
+
+      const groqKey = window.__ENV?.GROQ_API_KEY;
+
+      if (!groqKey) {
+        this.messages = [
+          ...this.messages,
+          {
+            id: crypto.randomUUID(),
+            role: 'agent',
+            text: 'Groq API key is not configured. Provide it at runtime via window.__ENV.GROQ_API_KEY.',
+            createdAt: Date.now(),
+          },
+        ];
+        return;
+      }
+
+      const parsed = await aiAgentParseToJson(text, {
+        apiKey: groqKey,
+        model: 'llama-3.1-8b-instant',
+      });
       await this.applyAgentResult(parsed);
 
       this.messages = [
@@ -113,15 +122,18 @@ export class Tab3Page {
         },
       ];
     } catch (e: any) {
+      const msg = String(e?.message ?? e);
       this.messages = [
         ...this.messages,
         {
           id: crypto.randomUUID(),
           role: 'agent',
-          text: `Sorry, I couldn't parse that. ${String(e?.message ?? e)}`,
+          text: msg,
           createdAt: Date.now(),
         },
       ];
+    } finally {
+      this.isSending = false;
     }
   }
 

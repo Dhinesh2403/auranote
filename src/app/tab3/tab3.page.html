@@ -22,8 +22,11 @@
         placeholder="Message Aura Agent"
         [(ngModel)]="draft"
         (keyup.enter)="send()"
+        [disabled]="isSending"
       ></ion-input>
-      <ion-button slot="end" (click)="send()">Send</ion-button>
+      <ion-button slot="end" (click)="send()" [disabled]="isSending || !draft.trim()">
+        {{ isSending ? 'Sending…' : 'Send' }}
+      </ion-button>
     </ion-item>
   </ion-toolbar>
 </ion-footer>

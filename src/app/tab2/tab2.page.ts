@@ -26,6 +26,7 @@ export class Tab2Page {
   reminders: Reminder[] = [];
   private storageReady = false;
   notificationPermission: 'granted' | 'denied' | 'prompt' | 'unknown' = 'unknown';
+  notificationsAvailable = true;
 
   constructor(
     private alertCtrl: AlertController,
@@ -34,7 +35,20 @@ export class Tab2Page {
 
   async ionViewWillEnter() {
     await this.ensureStorage();
-    await this.refreshPermission();
+
+    // LocalNotifications is not available on plain web builds.
+    this.notificationsAvailable = this.isNotificationsAvailable();
+
+    if (this.notificationsAvailable) {
+      try {
+        await this.refreshPermission();
+      } catch {
+        this.notificationPermission = 'unknown';
+      }
+    } else {
+      this.notificationPermission = 'unknown';
+    }
+
     await this.loadReminders();
   }
 
@@ -44,12 +58,30 @@ export class Tab2Page {
     this.storageReady = true;
   }
 
+  private isNotificationsAvailable() {
+    // On web, the plugin may throw when accessing it.
+    return typeof window !== 'undefined' && !!(window as any).Capacitor;
+  }
+
   async refreshPermission() {
+    if (!this.notificationsAvailable) {
+      this.notificationPermission = 'unknown';
+      return;
+    }
     const perms = await LocalNotifications.checkPermissions();
     this.notificationPermission = (perms.display as any) ?? 'unknown';
   }
 
   async requestPermission() {
+    if (!this.notificationsAvailable) {
+      const a = await this.alertCtrl.create({
+        header: 'Not available on web',
+        message: 'Notifications are not available in the web build. Use the Android app for scheduled reminders.',
+        buttons: ['OK'],
+      });
+      await a.present();
+      return;
+    }
     const perms = await LocalNotifications.requestPermissions();
     this.notificationPermission = (perms.display as any) ?? 'unknown';
   }
@@ -77,6 +109,7 @@ export class Tab2Page {
   }
 
   private async schedule(reminder: Reminder) {
+    if (!this.notificationsAvailable) return;
     const at = new Date(reminder.at);
     await LocalNotifications.schedule({
       notifications: [
@@ -98,6 +131,16 @@ export class Tab2Page {
   }
 
   async createReminder() {
+    if (!this.notificationsAvailable) {
+      const a = await this.alertCtrl.create({
+        header: 'Not available on web',
+        message: 'Creating scheduled reminders requires the native Android app. You can still view any reminders saved on this device.',
+        buttons: ['OK'],
+      });
+      await a.present();
+      return;
+    }
+
     if (this.notificationPermission !== 'granted') {
       await this.requestPermission();
       await this.refreshPermission();
@@ -182,7 +225,9 @@ export class Tab2Page {
           text: 'Delete',
           role: 'destructive',
           handler: async () => {
-            await LocalNotifications.cancel({ notifications: [{ id: this.toNotificationId(reminder.id) }] });
+            if (this.notificationsAvailable) {
+              await LocalNotifications.cancel({ notifications: [{ id: this.toNotificationId(reminder.id) }] });
+            }
             this.reminders = this.reminders.filter((r) => r.id !== reminder.id);
             await this.saveReminders();
           },

@@ -5,10 +5,10 @@
 //  - For Capacitor/Android, prefer a backend/proxy or native secure storage; anything shipped in the app can be extracted.
 //
 // Example injected at deploy time:
-//   window.__ENV = { GEMINI_API_KEY: "..." };
+//   window.__ENV = { GROQ_API_KEY: "..." };
 
 (function () {
   window.__ENV = window.__ENV || {};
   // Intentionally blank by default.
-  window.__ENV.GEMINI_API_KEY = window.__ENV.GEMINI_API_KEY || '';
+  window.__ENV.GROQ_API_KEY = window.__ENV.GROQ_API_KEY || '';
 })();
