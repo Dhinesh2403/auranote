@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { AlertController } from '@ionic/angular';
+import { AlertController, ToastController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 
 type Note = {
@@ -22,12 +22,22 @@ export class Tab1Page {
   notes: Note[] = [];
   private storageReady = false;
 
+  get notesCount() {
+    return this.notes.length;
+  }
+
   constructor(
     private alertCtrl: AlertController,
+    private toastCtrl: ToastController,
     private storage: Storage,
   ) {}
 
   async ionViewWillEnter() {
+    await this.ensureStorage();
+    await this.loadNotes();
+  }
+
+  async ionViewDidEnter() {
     await this.ensureStorage();
     await this.loadNotes();
   }
@@ -73,6 +83,7 @@ export class Tab1Page {
             };
             this.notes = [note, ...this.notes];
             await this.saveNotes();
+            await this.presentToast('Note added', 'checkmark-circle-outline', 'success');
           },
         },
       ],
@@ -103,6 +114,7 @@ export class Tab1Page {
 
             this.notes = [...this.notes].sort((a, b) => b.updatedAt - a.updatedAt);
             await this.saveNotes();
+            await this.presentToast('Note updated', 'checkmark-circle-outline', 'success');
           },
         },
       ],
@@ -123,11 +135,34 @@ export class Tab1Page {
           handler: async () => {
             this.notes = this.notes.filter((n) => n.id !== note.id);
             await this.saveNotes();
+            await this.presentToast('Note deleted', 'trash-outline', 'medium');
           },
         },
       ],
     });
 
     await confirm.present();
+  }
+
+  formatWhen(epoch: number) {
+    const d = new Date(epoch);
+    return d.toLocaleString([], {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }
+
+  private async presentToast(message: string, icon: string, color: string) {
+    const t = await this.toastCtrl.create({
+      message,
+      duration: 1600,
+      position: 'top',
+      color: color as any,
+      icon,
+    });
+    await t.present();
   }
 }

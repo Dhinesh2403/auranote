@@ -1,0 +1,49 @@
+:host {
+  --note-preview-lines: 2;
+}
+
+ion-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-text {
+  display: inline-block;
+}
+
+.count-badge {
+  margin-left: 6px;
+}
+
+.note-title {
+  font-weight: 600;
+}
+
+.note-preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--note-preview-lines);
+  line-clamp: var(--note-preview-lines);
+  overflow: hidden;
+  white-space: normal;
+}
+
+.note-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.empty-state {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  min-height: 60vh;
+  gap: 10px;
+}
+
+.empty-icon {
+  font-size: 56px;
+  opacity: 0.75;
+}

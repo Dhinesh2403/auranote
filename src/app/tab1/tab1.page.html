@@ -1,30 +1,54 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Notes</ion-title>
+    <ion-title>
+      <ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>
+      <span class="title-text">Notes</span>
+      <ion-badge *ngIf="notesCount" color="primary" class="count-badge">{{ notesCount }}</ion-badge>
+    </ion-title>
+
     <ion-buttons slot="end">
-      <ion-button (click)="createNote()">New</ion-button>
+      <ion-button (click)="createNote()">
+        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+        New
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-list *ngIf="notes.length; else empty">
-    <ion-item button detail="false" *ngFor="let note of notes" (click)="editNote(note)">
-      <ion-label>
-        <h2>{{ note.title }}</h2>
-        <p>{{ note.content }}</p>
-      </ion-label>
-      <ion-button slot="end" fill="clear" color="danger" (click)="$event.stopPropagation(); deleteNote(note)">
-        Delete
-      </ion-button>
-    </ion-item>
+  <ion-list *ngIf="notes.length; else empty" lines="inset">
+    <ion-item-sliding *ngFor="let note of notes">
+      <ion-item button detail="true" (click)="editNote(note)">
+        <ion-icon name="document-outline" slot="start" color="medium"></ion-icon>
+        <ion-label>
+          <h2 class="note-title">{{ note.title }}</h2>
+          <p class="note-preview">{{ note.content }}</p>
+          <p class="note-meta">Updated {{ formatWhen(note.updatedAt) }}</p>
+        </ion-label>
+      </ion-item>
+
+      <ion-item-options side="end">
+        <ion-item-option color="primary" (click)="editNote(note)">
+          <ion-icon name="create-outline" slot="start"></ion-icon>
+          Edit
+        </ion-item-option>
+        <ion-item-option color="danger" (click)="deleteNote(note)">
+          <ion-icon name="trash-outline" slot="start"></ion-icon>
+          Delete
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
   </ion-list>
 
   <ng-template #empty>
-    <div class="ion-padding">
+    <div class="empty-state ion-padding">
+      <ion-icon name="documents-outline" class="empty-icon" aria-hidden="true"></ion-icon>
       <h2>No notes yet</h2>
-      <p>Create your first note.</p>
-      <ion-button expand="block" (click)="createNote()">Create note</ion-button>
+      <p>Create your first note and it will appear here.</p>
+      <ion-button expand="block" (click)="createNote()">
+        <ion-icon name="add" slot="start"></ion-icon>
+        Create note
+      </ion-button>
     </div>
   </ng-template>
 </ion-content>

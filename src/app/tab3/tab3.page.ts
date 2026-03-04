@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { aiAgentParseToJson, type AuraAgentResult } from '../ai-agent';
+import { aiAgentParse, type AuraAgentResult } from '../ai-agent';
 
 declare global {
   interface Window {
@@ -106,18 +106,19 @@ export class Tab3Page {
         return;
       }
 
-      const parsed = await aiAgentParseToJson(text, {
+      const { result, reply } = await aiAgentParse(text, {
         apiKey: groqKey,
         model: 'llama-3.1-8b-instant',
       });
-      await this.applyAgentResult(parsed);
+
+      await this.applyAgentResult(result);
 
       this.messages = [
         ...this.messages,
         {
           id: crypto.randomUUID(),
           role: 'agent',
-          text: `Understood: ${JSON.stringify(parsed)}`,
+          text: reply,
           createdAt: Date.now(),
         },
       ];
