@@ -18,9 +18,18 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 
-  <!-- Local (gitignored) runtime config override (optional) -->
-  <script src="assets/env.local.js"></script>
-  <!-- Runtime config injected at deploy time (do not commit secrets in source). -->
+  <!-- Runtime config: try local override first (ignored if missing), then env.js -->
+  <script>
+    (function () {
+      var s = document.createElement('script');
+      s.src = 'assets/env.local.js';
+      s.async = false;
+      s.onerror = function () {
+        // env.local.js is optional (gitignored). Ignore if not present.
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
   <script src="assets/env.js"></script>
 </head>
 
