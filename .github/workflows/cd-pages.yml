@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - gh-pages
   workflow_dispatch:
 
 permissions:
@@ -33,6 +32,24 @@ jobs:
 
       - name: Build (GitHub Pages)
         run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
+
+      - name: Inject runtime env (GEMINI_API_KEY)
+        shell: bash
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "Missing GEMINI_API_KEY secret" >&2
+            exit 1
+          fi
+          cat > www/assets/env.js <<'EOF'
+          (function () {
+            window.__ENV = window.__ENV || {};
+            window.__ENV.GEMINI_API_KEY = "__GEMINI_API_KEY__";
+          })();
+          EOF
+          # Replace placeholder safely
+          sed -i "s/__GEMINI_API_KEY__/${GEMINI_API_KEY//\//\\/}/g" www/assets/env.js
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4

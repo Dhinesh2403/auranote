@@ -2,8 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches: ["main", "develop", "demo"]
   pull_request:
+    branches: ["main", "develop", "demo"]
 
 permissions:
   contents: read
@@ -32,15 +33,18 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Unit tests (headless)
+      - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1
 
-      - name: Run tests
+      - name: Unit tests (headless)
         env:
           CHROME_BIN: chrome
           CI: true
           KARMA_BROWSER: ChromeHeadlessCI
         run: npm run test:ci
+
+      - name: npm audit (informational)
+        run: npm audit --audit-level=high || true
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4

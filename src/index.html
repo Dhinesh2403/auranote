@@ -17,6 +17,11 @@
   <!-- add to homescreen for ios -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+  <!-- Local (gitignored) runtime config override (optional) -->
+  <script src="assets/env.local.js"></script>
+  <!-- Runtime config injected at deploy time (do not commit secrets in source). -->
+  <script src="assets/env.js"></script>
 </head>
 
 <body>

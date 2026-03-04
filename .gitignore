@@ -68,3 +68,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Local runtime env (never commit secrets)
+src/assets/env.local.js

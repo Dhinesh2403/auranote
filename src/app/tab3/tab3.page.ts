@@ -2,8 +2,15 @@ import { Component } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { environment } from '../../environments/environment';
 import { aiAgentParseToJson, type AuraAgentResult } from '../ai-agent';
+
+declare global {
+  interface Window {
+    __ENV?: {
+      GEMINI_API_KEY?: string;
+    };
+  }
+}
 
 type ChatMessage = {
   id: string;
@@ -78,13 +85,14 @@ export class Tab3Page {
     ];
     this.draft = '';
 
-    if (!environment.geminiApiKey) {
+    const apiKey = window.__ENV?.GEMINI_API_KEY;
+    if (!apiKey) {
       this.messages = [
         ...this.messages,
         {
           id: crypto.randomUUID(),
           role: 'agent',
-          text: 'Gemini API key is not configured. Set environment.geminiApiKey to enable AI parsing.',
+          text: 'Gemini API key is not configured. Provide it at runtime via window.__ENV.GEMINI_API_KEY.',
           createdAt: Date.now(),
         },
       ];
@@ -92,7 +100,7 @@ export class Tab3Page {
     }
 
     try {
-      const parsed = await aiAgentParseToJson(text, { apiKey: environment.geminiApiKey });
+      const parsed = await aiAgentParseToJson(text, { apiKey });
       await this.applyAgentResult(parsed);
 
       this.messages = [
