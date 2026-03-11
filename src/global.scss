@@ -35,3 +35,503 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
+
+/* Import a clean, modern font for the whole app */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+:root {
+  --ion-font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+
+  /* Semantic color tokens (light theme defaults) */
+  --app-bg: #f7f8fb; /* page background */
+  --app-surface: #ffffff; /* cards, sheets */
+  --app-text: #081029; /* primary text */
+  --app-subtext: #6b7280; /* muted text */
+  --app-muted-strong: rgba(6,18,33,0.08);
+  --app-border: rgba(6,18,33,0.06);
+
+  --color-primary: #3366ff;
+  --color-primary-contrast: #ffffff;
+  --color-secondary: #7c3aed;
+  --color-success: #16a34a;
+  --color-danger: #ef4444;
+
+  /* UI specifics */
+  --toolbar-bg: var(--app-surface);
+  --toolbar-text: var(--app-text);
+  --card-bg: var(--app-surface);
+  --item-bg: transparent;
+  --tabbar-bg: #ffffff;
+  --tabbar-border: rgba(6,18,33,0.04);
+}
+
+/* Dark theme overrides: use .dark on body or prefer-color-scheme */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-bg: #0b1220; /* deep navy */
+    --app-surface: #0f1724; /* card surface */
+    --app-text: #e6eef8; /* light text */
+    --app-subtext: #9aa6b2; /* muted light */
+    --app-muted-strong: rgba(255,255,255,0.04);
+    --app-border: rgba(255,255,255,0.06);
+
+    --color-primary: #5aa0ff;
+    --color-primary-contrast: #06223a;
+    --color-secondary: #a78bfa;
+    --color-success: #34d399;
+    --color-danger: #ff7b7b;
+
+    --toolbar-bg: var(--app-surface);
+    --toolbar-text: var(--app-text);
+    --card-bg: #0b1320;
+    --item-bg: transparent;
+    --tabbar-bg: #071025;
+    --tabbar-border: rgba(255,255,255,0.04);
+  }
+}
+
+/* Apply semantic tokens to components */
+ion-app, body, ion-content {
+  background: var(--app-bg) !important;
+  color: var(--app-text) !important;
+}
+
+ion-toolbar, ion-header {
+  background: var(--toolbar-bg) !important;
+  color: var(--toolbar-text) !important;
+}
+
+ion-card, .editor-card {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--app-border);
+}
+
+ion-item {
+  background: var(--item-bg) !important;
+  border-radius: 8px;
+  color: var(--app-text) !important;
+}
+
+ion-tab-bar {
+  background: var(--tabbar-bg) !important;
+  border-top: 1px solid var(--tabbar-border);
+}
+
+ion-tab-button ion-label, ion-tab-button ion-icon {
+  color: var(--app-subtext);
+}
+
+ion-badge {
+  background: var(--color-primary) !important;
+  color: var(--color-primary-contrast) !important;
+}
+
+/* Emphasize primary text and mute secondary */
+.title-text,
+ion-toolbar ion-title {
+  color: var(--app-text) !important;
+}
+
+.note-title, .reminder-title {
+  color: var(--app-text) !important;
+}
+
+.note-preview, .reminder-preview, .note-meta, .reminder-meta {
+  color: var(--app-subtext) !important;
+}
+
+/* Buttons using primary color */
+ion-button.ion-color-primary, ion-button[color="primary"] {
+  --background: var(--color-primary);
+  --color: var(--color-primary-contrast);
+}
+
+/* Make borders/shadows subtle in dark mode */
+:root, .dark {
+  --card-shadow: 0 8px 24px rgba(6,18,33,0.04);
+}
+
+body {
+  font-family: var(--ion-font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Align toolbar titles left across the app and give a subtle weight */
+ion-toolbar ion-title,
+ion-header ion-title {
+  text-align: left;
+  font-weight: 600;
+  margin-left: 0.5rem;
+  color: #0b1220; /* deep navy for primary titles */
+  font-size: 20px;
+  letter-spacing: -0.2px;
+}
+
+/* Remove any default icon space inside headers */
+ion-toolbar .toolbar-title {
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure toolbar titles are left aligned even when Ionic centers them */
+ion-toolbar .toolbar-title,
+ion-toolbar ion-title,
+ion-header ion-title,
+ion-toolbar .title-text {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  padding-left: 0.5rem !important;
+  margin-left: 0 !important;
+}
+
+/* If any page uses the center alignment helper, explicitly unset it */
+ion-toolbar .toolbar-title[aria-role="heading"],
+ion-toolbar .toolbar-title.ion-text-center,
+ion-title.ion-text-center {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+/* Make tab labels a bit larger and spaced nicely */
+ion-tab-button {
+  font-size: 0.95rem;
+  padding: 6px 10px;
+}
+
+ion-badge {
+  --background: var(--ion-color-primary, #3880ff);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Action icon/button sizing and spacing for a consistent, compact look */
+.action-icon {
+  font-size: 20px !important;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn {
+  --padding-start: 6px;
+  --padding-end: 6px;
+  min-width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn ion-icon {
+  font-size: 18px !important;
+}
+
+/* Editor card polish */
+.editor-card {
+  border-radius: 12px;
+  margin: 12px;
+  box-shadow: 0 8px 24px rgba(22, 28, 37, 0.06);
+  overflow: hidden;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+/* Repeat segment styling for reminders */
+.repeat-segment {
+  --background: transparent;
+  --indicator-color: var(--ion-color-primary);
+  margin-top: 8px;
+  border-radius: 10px;
+  padding: 4px;
+  background: rgba(0,0,0,0.03);
+}
+
+.repeat-segment ion-segment-button {
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+
+/* Repeat grid: two rows of chip-like buttons */
+.repeat-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.repeat-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.repeat-chip {
+  --padding-start: 12px;
+  --padding-end: 12px;
+  height: 38px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 96px;
+  justify-content: center;
+  border: 1px solid var(--app-border);
+  background: transparent;
+  color: var(--app-subtext);
+  font-weight: 600;
+}
+
+.repeat-chip ion-icon {
+  font-size: 18px;
+  color: inherit;
+}
+
+/* Selected chip appearance */
+.repeat-chip[color="primary"],
+.repeat-chip[fill="solid"][color="primary"] {
+  /* use the requested selected color */
+  background: #d1deef !important;
+  /* ensure readable text on selected chip */
+  color: var(--app-text) !important;
+  border-color: transparent;
+}
+
+/* Selected chip appearance: ensure Ionic vars are set so color applies even to fill="clear" */
+.repeat-chip.ion-color-primary,
+.repeat-chip.ion-color-primary[fill="solid"],
+.repeat-chip.ion-color-primary[fill="outline"],
+.repeat-chip[color="primary"],
+.repeat-chip[fill="solid"][color="primary"] {
+  /* set Ionic CSS variables which control button appearance */
+  --background: #d1deef !important;
+  --background-activated: #c5d7f0 !important;
+  --color: var(--app-text) !important;
+  /* fallback for direct background/color if variables aren't honored */
+  background: #d1deef !important;
+  color: var(--app-text) !important;
+  border-color: transparent !important;
+}
+
+/* Ensure class-based selection also applies (template sets .selected) */
+.repeat-chip.selected {
+  --background: #d1deef !important;
+  --background-activated: #c5d7f0 !important;
+  --color: var(--app-text) !important;
+  background: #d1deef !important;
+  color: var(--app-text) !important;
+  border-color: transparent !important;
+}
+
+/* Ensure chips wrap nicely on very narrow screens */
+@media (max-width: 420px) {
+  .repeat-row {
+    gap: 6px;
+  }
+  .repeat-chip {
+    min-width: 80px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Make list action icons a bit lighter and consistent */
+ion-item ion-icon[slot="start"],
+ion-item .action-btn ion-icon,
+ion-button ion-icon {
+  opacity: 0.95;
+}
+
+/* Smaller tab icons */
+ion-tab-button ion-icon {
+  font-size: 20px;
+}
+
+/* Slightly larger send icon spacing in AI Agent */
+ion-footer ion-button ion-icon[name="send"] {
+  margin-right: 6px;
+}
+
+/* Increase bottom tab bar height and icon size so labels aren't hidden */
+ion-tab-bar {
+  height: 72px; /* taller tab bar */
+  padding-bottom: env(safe-area-inset-bottom); /* respect notches */
+}
+
+ion-tab-button {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+ion-tab-button ion-icon {
+  font-size: 24px; /* slightly larger icons */
+  height: 28px;
+  width: 28px;
+}
+
+ion-tab-button ion-label {
+  font-size: 12px;
+  margin-top: 4px;
+  line-height: 1.1;
+}
+
+/* Prevent content from being obscured by the larger bottom bar */
+ion-content {
+  --padding-bottom: 96px; /* slightly larger safe area */
+}
+
+/* Polished list item layout used by Notes and Reminders */
+ion-list {
+  padding: 6px 8px; /* tightened horizontal padding */
+}
+
+ion-item.list-item {
+  margin-bottom: 8px;
+  border-radius: 8px;
+  padding: 8px 8px; /* tighter internal padding, reduce left/right gap */
+  align-items: center;
+  --background: transparent;
+  transition: background-color 150ms ease, transform 120ms ease;
+}
+
+ion-item.list-item:hover {
+  background: rgba(0,0,0,0.02);
+  transform: translateY(-1px);
+}
+
+/* Uniform left icon for list items */
+.list-icon,
+ion-item ion-icon[slot="start"] {
+  font-size: 18px !important;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 6px; /* further reduce left gap */
+  flex-shrink: 0;
+  color: var(--ion-color-medium);
+}
+
+/* Label area should not overflow; reserve space for small action buttons */
+.list-item-label {
+  display: block;
+  min-width: 0; /* allow truncation */
+}
+
+/* Title should be a single line with ellipsis */
+.note-title,
+.reminder-title {
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* use semantic token so it adapts to light/dark themes */
+  color: var(--app-text) !important;
+}
+
+/* Preview supports up to two lines and then ellipsizes */
+.note-preview,
+.reminder-preview {
+  margin: 4px 0 0 0;
+  /* use semantic token for subtext */
+  color: var(--app-subtext) !important;
+  font-size: 0.92rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Meta line (date/recurrence) */
+.note-meta,
+.reminder-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--app-subtext) !important;
+}
+
+/* Card titles and subtitles */
+ion-card-title {
+  color: #0b1220;
+  font-size: 16px;
+  font-weight: 700;
+}
+ion-card-subtitle {
+  color: #6b7280; /* muted gray for subtext */
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Meta and preview subtext (notes/reminders) */
+ion-card .subtext {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Reduce the star icon used in notes for a subtle look */
+.note-star {
+  font-size: 15px !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Selected tab button styling - ensure indicator and icon/label color show when a tab is selected */
+ion-tab-button.tab-selected,
+ion-tab-button.ion-selected,
+ion-tab-button[aria-selected="true"] {
+  /* set Ionic button color variable so icons/labels use primary */
+  --color: var(--color-primary) !important;
+  --ion-color-base: var(--color-primary) !important;
+}
+
+ion-tab-button.tab-selected ion-icon,
+ion-tab-button.ion-selected ion-icon,
+ion-tab-button[aria-selected="true"] ion-icon,
+ion-tab-button.tab-selected ion-label,
+ion-tab-button.ion-selected ion-label,
+ion-tab-button[aria-selected="true"] ion-label {
+  color: var(--color-primary) !important;
+}
+
+/* Also ensure tab badges on selected tab contrast properly */
+ion-tab-button.tab-selected ion-badge,
+ion-tab-button.ion-selected ion-badge,
+ion-tab-button[aria-selected="true"] ion-badge {
+  background: var(--color-primary) !important;
+  color: var(--color-primary-contrast) !important;
+}
+
+/* Strong override for selected tab using shadow DOM parts (Ionic) */
+ion-tab-button[aria-selected="true"]::part(native),
+ion-tab-button.ion-selected::part(native),
+ion-tab-button.tab-selected::part(native) {
+  /* ensure button-level color var is set for icons/labels */
+  --color: var(--color-primary) !important;
+  --background: transparent !important;
+}
+
+ion-tab-button[aria-selected="true"]::part(icon),
+ion-tab-button.ion-selected::part(icon),
+ion-tab-button.tab-selected::part(icon) {
+  color: var(--color-primary) !important;
+}
+
+ion-tab-button[aria-selected="true"]::part(label),
+ion-tab-button.ion-selected::part(label),
+ion-tab-button.tab-selected::part(label) {
+  color: var(--color-primary) !important;
+}
+
+ion-tab-button[aria-selected="true"]::part(badge),
+ion-tab-button.ion-selected::part(badge),
+ion-tab-button.tab-selected::part(badge) {
+  background: var(--color-primary) !important;
+  color: var(--color-primary-contrast) !important;
+}

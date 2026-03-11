@@ -1,9 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      <ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>
       <span class="title-text">Notes</span>
-      <ion-badge *ngIf="notesCount" color="primary" class="count-badge">{{ notesCount }}</ion-badge>
     </ion-title>
 
     <ion-buttons slot="end">
@@ -16,19 +14,54 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <!-- Inline editor for creating/editing notes -->
+  <ion-card *ngIf="showEditor" class="editor-card">
+    <ion-card-header>
+      <ion-card-title>{{ editorIndex === null ? 'New note' : 'Edit note' }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-input placeholder="Title" [(ngModel)]="editorNote.title"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-textarea rows="8" placeholder="Write your note..." [(ngModel)]="editorNote.content"></ion-textarea>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-button fill="clear" (click)="editorNote.starred = !editorNote.starred">
+          <ion-icon [name]="editorNote.starred ? 'star' : 'star-outline'" slot="start"></ion-icon>
+          {{ editorNote.starred ? 'Starred' : 'Mark as starred' }}
+        </ion-button>
+      </ion-item>
+    </ion-card-content>
+    <ion-footer>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="cancelEditor()">Cancel</ion-button>
+        </ion-buttons>
+        <ion-buttons slot="end">
+          <ion-button (click)="saveEditor()">Save</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-footer>
+  </ion-card>
+
   <ion-list *ngIf="notes.length; else empty" lines="inset">
-    <ion-item-sliding *ngFor="let note of notes">
-      <ion-item button detail="true" (click)="editNote(note)">
-        <ion-icon name="document-outline" slot="start" color="medium"></ion-icon>
+    <ion-item-sliding *ngFor="let note of notes; let i = index">
+      <ion-item button detail="true" (click)="editNote(note, i)">
+        <ion-icon (click)="toggleStar(note); $event.stopPropagation()" [name]="note.starred ? 'star' : 'star-outline'" slot="start" color="warning" class="action-icon note-star"></ion-icon>
         <ion-label>
           <h2 class="note-title">{{ note.title }}</h2>
           <p class="note-preview">{{ note.content }}</p>
           <p class="note-meta">Updated {{ formatWhen(note.updatedAt) }}</p>
         </ion-label>
+        <!-- edit icon removed to declutter UI; edit still available via slide or tapping the item -->
+        <ion-button slot="end" fill="clear" size="small" color="danger" class="action-btn" (click)="deleteNote(note); $event.stopPropagation()">
+          <ion-icon name="trash-outline"></ion-icon>
+        </ion-button>
       </ion-item>
 
       <ion-item-options side="end">
-        <ion-item-option color="primary" (click)="editNote(note)">
+        <ion-item-option color="primary" (click)="editNote(note, i)">
           <ion-icon name="create-outline" slot="start"></ion-icon>
           Edit
         </ion-item-option>

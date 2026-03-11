@@ -25,6 +25,7 @@
         [disabled]="isSending"
       ></ion-input>
       <ion-button slot="end" (click)="send()" [disabled]="isSending || !draft.trim()">
+        <ion-icon name="send" slot="start"></ion-icon>
         {{ isSending ? 'Sending…' : 'Send' }}
       </ion-button>
     </ion-item>

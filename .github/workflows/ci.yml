@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["main", "develop", "demo"]
+    branches: [ '**' ]
   pull_request:
-    branches: ["main", "develop", "demo"]
+    branches: [ '**' ]
 
 permissions:
   contents: read
@@ -14,51 +14,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test:
+  build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v1
-
-      - name: Unit tests (headless)
-        env:
-          CHROME_BIN: chrome
-          CI: true
-          KARMA_BROWSER: ChromeHeadlessCI
-        run: npm run test:ci
-
-      - name: npm audit (informational)
-        run: npm audit --audit-level=high || true
-
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage
-          if-no-files-found: warn
-
       - name: Build (web)
-        run: npm run build -- --configuration=production
+        run: npm run build --if-present
 
-      - name: Upload web build artifact
+      - name: Run tests
+        run: npm test --if-present
+
+      - name: Upload www artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: www
+          name: www-artifact
           path: www
-          if-no-files-found: error

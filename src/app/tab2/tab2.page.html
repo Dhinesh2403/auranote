@@ -1,14 +1,18 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Reminders</ion-title>
+    <ion-title class="ion-text-left">Reminders</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="createReminder()">New</ion-button>
+      <ion-button (click)="createReminder()">
+        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+        New
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-card>
+  <!-- Hide the permission request card entirely when permission is already granted -->
+  <ion-card *ngIf="notificationPermission !== 'granted'">
     <ion-card-header>
       <ion-card-title>Notifications</ion-card-title>
       <ion-card-subtitle>Permission: {{ notificationPermission }}</ion-card-subtitle>
@@ -18,14 +22,81 @@
     </ion-card-content>
   </ion-card>
 
+  <!-- Inline editor for creating/editing reminders -->
+  <ion-card *ngIf="showEditor" class="editor-card">
+    <ion-card-header>
+      <ion-card-title>{{ editorIndex === null ? 'New reminder' : 'Edit reminder' }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-input placeholder="Title" [(ngModel)]="editorReminder.title"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-textarea rows="4" placeholder="Message" [(ngModel)]="editorReminder.body"></ion-textarea>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">When</ion-label>
+        <ion-datetime display-format="DD-MM-YYYY HH:mm" picker-format="DD-MM-YYYY HH:mm" [(ngModel)]="editorReminder.at" presentation="date-time"></ion-datetime>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Repeat</ion-label>
+        <div class="repeat-grid">
+          <div class="repeat-row">
+            <ion-button fill="clear" class="repeat-chip" [color]="editorReminder.recurrence === 'once' ? 'primary' : undefined" [class.selected]="editorReminder.recurrence === 'once'" (click)="editorReminder.recurrence = 'once'">
+              <ion-icon name="time-outline"></ion-icon>
+              <span>Once</span>
+            </ion-button>
+            <ion-button fill="clear" class="repeat-chip" [color]="editorReminder.recurrence === 'daily' ? 'primary' : undefined" [class.selected]="editorReminder.recurrence === 'daily'" (click)="editorReminder.recurrence = 'daily'">
+              <ion-icon name="calendar-clear-outline"></ion-icon>
+              <span>Daily</span>
+            </ion-button>
+          </div>
+          <div class="repeat-row">
+            <ion-button fill="clear" class="repeat-chip" [color]="editorReminder.recurrence === 'weekly' ? 'primary' : undefined" [class.selected]="editorReminder.recurrence === 'weekly'" (click)="editorReminder.recurrence = 'weekly'">
+              <ion-icon name="repeat-outline"></ion-icon>
+              <span>Weekly</span>
+            </ion-button>
+            <ion-button fill="clear" class="repeat-chip" [color]="editorReminder.recurrence === 'yearly' ? 'primary' : undefined" [class.selected]="editorReminder.recurrence === 'yearly'" (click)="editorReminder.recurrence = 'yearly'">
+              <ion-icon name="calendar-outline"></ion-icon>
+              <span>Yearly</span>
+            </ion-button>
+          </div>
+        </div>
+      </ion-item>
+    </ion-card-content>
+
+    <ion-footer>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="cancelReminderEditor()">
+            <ion-icon name="close-outline" slot="start"></ion-icon>
+            Cancel
+          </ion-button>
+        </ion-buttons>
+        <ion-buttons slot="end">
+          <ion-button (click)="saveReminder()">
+            <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+            Save
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-footer>
+  </ion-card>
+
   <ion-list *ngIf="reminders.length; else empty">
-    <ion-item *ngFor="let r of reminders">
-      <ion-label>
-        <h2>{{ r.title }}</h2>
-        <p>{{ formatWhen(r.at) }} • {{ formatRecurrence(r.recurrence) }}</p>
-        <p *ngIf="r.body">{{ r.body }}</p>
+    <ion-item button detail="true" *ngFor="let r of reminders; let i = index" (click)="createReminder(r, i)">
+      <ion-icon name="alarm-outline" slot="start" class="list-icon"></ion-icon>
+      <ion-label class="list-item-label">
+        <h2 class="reminder-title">{{ r.title }}</h2>
+        <p class="reminder-preview">{{ r.body }}</p>
+        <p class="reminder-meta">{{ formatWhen(r.at) }} • {{ formatRecurrence(r.recurrence) }}</p>
       </ion-label>
-      <ion-button slot="end" fill="clear" color="danger" (click)="deleteReminder(r)">Delete</ion-button>
+      <!-- Quick delete button like Notes tab; tapping item opens edit -->
+      <ion-button slot="end" fill="clear" size="small" color="danger" class="action-btn" (click)="deleteReminder(r); $event.stopPropagation()">
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
     </ion-item>
   </ion-list>
 
@@ -33,7 +104,10 @@
     <div class="ion-padding">
       <h2>No reminders yet</h2>
       <p>Create a reminder and choose recurrence (once/daily/weekly/monthly).</p>
-      <ion-button expand="block" (click)="createReminder()">Create reminder</ion-button>
+      <ion-button expand="block" (click)="createReminder()">
+        <ion-icon name="add" slot="start"></ion-icon>
+        Create reminder
+      </ion-button>
     </div>
   </ng-template>
 </ion-content>

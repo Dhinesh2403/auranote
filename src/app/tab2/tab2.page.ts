@@ -3,7 +3,7 @@ import { AlertController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
-type Recurrence = 'once' | 'daily' | 'weekly' | 'monthly';
+type Recurrence = 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 type Reminder = {
   id: string;
@@ -28,6 +28,19 @@ export class Tab2Page {
   notificationPermission: 'granted' | 'denied' | 'prompt' | 'unknown' = 'unknown';
   notificationsAvailable = true;
 
+  // Inline reminder editor state
+  showEditor = false;
+  editorReminder: { title: string; body: string; at: string; recurrence: Recurrence } = { title: '', body: '', at: '', recurrence: 'once' };
+  editorIndex: number | null = null;
+
+  // Handler to refresh reminders when other parts of the app update storage
+  private remindersUpdatedHandler = async () => {
+    try {
+      await this.ensureStorage();
+      await this.loadReminders();
+    } catch {}
+  };
+
   constructor(
     private alertCtrl: AlertController,
     private storage: Storage,
@@ -50,6 +63,19 @@ export class Tab2Page {
     }
 
     await this.loadReminders();
+  }
+
+  async ionViewDidEnter() {
+    // Listen for external updates and refresh immediately
+    try {
+      window.addEventListener('aura:reminders-updated', this.remindersUpdatedHandler as EventListener);
+    } catch {}
+  }
+
+  async ionViewDidLeave() {
+    try {
+      window.removeEventListener('aura:reminders-updated', this.remindersUpdatedHandler as EventListener);
+    } catch {}
   }
 
   private async ensureStorage() {
@@ -99,12 +125,9 @@ export class Tab2Page {
     if (recurrence === 'daily') {
       return { repeats: true, every: 'day', at } as any;
     }
-    if (recurrence === 'weekly') {
-      return { repeats: true, every: 'week', at } as any;
-    }
-    if (recurrence === 'monthly') {
-      return { repeats: true, every: 'month', at } as any;
-    }
+    if (recurrence === 'weekly') return { repeats: true, every: 'week', at } as any;
+    if (recurrence === 'monthly') return { repeats: true, every: 'month', at } as any;
+    if (recurrence === 'yearly') return { repeats: true, every: 'year', at } as any;
     return { at } as any;
   }
 
@@ -130,8 +153,12 @@ export class Tab2Page {
     return Math.abs(hash);
   }
 
-  async createReminder() {
-    if (!this.notificationsAvailable) {
+  // Open the inline editor for a new or existing reminder
+  async createReminder(reminder?: Reminder, index?: number) {
+    const isEdit = !!reminder && typeof index === 'number';
+
+    // When creating new reminders, block on web builds since scheduling isn't available
+    if (!isEdit && !this.notificationsAvailable) {
       const a = await this.alertCtrl.create({
         header: 'Not available on web',
         message: 'Creating scheduled reminders requires the native Android app. You can still view any reminders saved on this device.',
@@ -141,79 +168,106 @@ export class Tab2Page {
       return;
     }
 
-    if (this.notificationPermission !== 'granted') {
-      await this.requestPermission();
-      await this.refreshPermission();
+    // If editing, prefill editor with existing values
+    if (isEdit) {
+      this.editorIndex = index!;
+      this.editorReminder = {
+        title: reminder!.title,
+        body: reminder!.body,
+        at: new Date(new Date(reminder!.at).getTime() - new Date(reminder!.at).getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+        recurrence: reminder!.recurrence,
+      };
+    } else {
+      // New reminder: use current system time as default
+      const now = new Date();
+      this.editorIndex = null;
+      this.editorReminder = {
+        title: '',
+        body: '',
+        at: new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16),
+        recurrence: 'once',
+      };
     }
 
-    const displayPerm = this.notificationPermission;
-    if (displayPerm !== 'granted') {
-      const a = await this.alertCtrl.create({
-        header: 'Permission required',
-        message: 'Enable notifications to create reminders.',
-        buttons: ['OK'],
-      });
-      await a.present();
-      return;
+    // If notifications available, ensure permission for scheduling new reminders
+    if (this.notificationsAvailable && !isEdit) {
+      if (this.notificationPermission !== 'granted') {
+        await this.requestPermission();
+        await this.refreshPermission();
+      }
+
+      if (this.notificationPermission !== 'granted') {
+        const a = await this.alertCtrl.create({ header: 'Permission required', message: 'Enable notifications to create reminders.', buttons: ['OK'] });
+        await a.present();
+        return;
+      }
     }
 
-    const nowPlus5 = new Date(Date.now() + 5 * 60 * 1000);
-    const defaultIsoLocal = new Date(nowPlus5.getTime() - nowPlus5.getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 16);
+    this.showEditor = true;
+  }
 
-    const alert = await this.alertCtrl.create({
-      header: 'New reminder',
-      inputs: [
-        { name: 'title', type: 'text', placeholder: 'Title' },
-        { name: 'body', type: 'textarea', placeholder: 'Message' },
-        { name: 'at', type: 'datetime-local', value: defaultIsoLocal },
-        {
-          name: 'recurrence',
-          type: 'radio',
-          label: 'Once',
-          value: 'once',
-          checked: true,
-        },
-        { name: 'recurrence', type: 'radio', label: 'Every day', value: 'daily' },
-        { name: 'recurrence', type: 'radio', label: 'Every week', value: 'weekly' },
-        { name: 'recurrence', type: 'radio', label: 'Every month', value: 'monthly' },
-      ],
-      buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        {
-          text: 'Save',
-          handler: async (data) => {
-            const title = (data.title ?? '').trim();
-            const body = (data.body ?? '').trim();
-            const at = (data.at ?? '').trim();
-            const recurrence = (data.recurrence ?? 'once') as Recurrence;
+  // Cancel inline editor
+  cancelReminderEditor() {
+    this.showEditor = false;
+    this.editorIndex = null;
+  }
 
-            if (!title) return;
-            const date = new Date(at);
-            if (Number.isNaN(date.getTime())) return;
+  // Save the reminder from inline editor (create or update)
+  async saveReminder() {
+    const title = (this.editorReminder.title ?? '').trim();
+    const body = (this.editorReminder.body ?? '').trim();
+    const at = (this.editorReminder.at ?? '').trim();
+    const recurrence = (this.editorReminder.recurrence ?? 'once') as Recurrence;
+    if (!title) return;
+    const date = new Date(at);
+    if (Number.isNaN(date.getTime())) return;
 
-            const reminder: Reminder = {
-              id: crypto.randomUUID(),
-              title,
-              body,
-              at: date.toISOString(),
-              recurrence,
-              createdAt: Date.now(),
-            };
+    const isEdit = this.editorIndex !== null;
 
-            await this.schedule(reminder);
+    if (isEdit) {
+      const old = this.reminders[this.editorIndex!];
+      if (this.notificationsAvailable) {
+        try {
+          await LocalNotifications.cancel({ notifications: [{ id: this.toNotificationId(old.id) }] });
+        } catch {}
+      }
 
-            this.reminders = [...this.reminders, reminder].sort(
-              (a, b) => new Date(a.at).getTime() - new Date(b.at).getTime(),
-            );
-            await this.saveReminders();
-          },
-        },
-      ],
-    });
+      const updated: Reminder = {
+        ...old,
+        title,
+        body,
+        at: date.toISOString(),
+        recurrence,
+      };
 
-    await alert.present();
+      if (this.notificationsAvailable && this.notificationPermission === 'granted') {
+        await this.schedule(updated);
+      }
+
+      this.reminders[this.editorIndex!] = updated;
+    } else {
+      const newReminder: Reminder = {
+        id: crypto.randomUUID(),
+        title,
+        body,
+        at: date.toISOString(),
+        recurrence,
+        createdAt: Date.now(),
+      };
+
+      if (this.notificationsAvailable && this.notificationPermission === 'granted') {
+        await this.schedule(newReminder);
+      }
+
+      this.reminders = [...this.reminders, newReminder];
+    }
+
+    this.reminders = this.reminders.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+    await this.saveReminders();
+    // Notify other pages/tabs to auto-refresh
+    try { window.dispatchEvent(new CustomEvent('aura:reminders-updated')); } catch {}
+    this.showEditor = false;
+    this.editorIndex = null;
   }
 
   async deleteReminder(reminder: Reminder) {
@@ -230,6 +284,8 @@ export class Tab2Page {
             }
             this.reminders = this.reminders.filter((r) => r.id !== reminder.id);
             await this.saveReminders();
+            // Notify other pages/tabs to auto-refresh
+            try { window.dispatchEvent(new CustomEvent('aura:reminders-updated')); } catch {}
           },
         },
       ],
@@ -241,6 +297,7 @@ export class Tab2Page {
     if (r === 'daily') return 'Every day';
     if (r === 'weekly') return 'Every week';
     if (r === 'monthly') return 'Every month';
+    if (r === 'yearly') return 'Every year';
     return 'Once';
   }
 
