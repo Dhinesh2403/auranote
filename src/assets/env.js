@@ -16,5 +16,7 @@
 (function () {
   window.__ENV = window.__ENV || {};
   // Intentionally blank by default.
-  window.__ENV.GROQ_API_KEY = window.__ENV.GROQ_API_KEY || '';
+  window.__ENV.AURA_ENDPOINT =  window.__ENV.AURA_ENDPOINT || '';
+  window.__ENV.AURA_API_KEY =  window.__ENV.AURA_API_KEY || '';
+
 })();

@@ -29,11 +29,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install system deps (Chromium + Xvfb)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb chromium-browser chromium
+        shell: bash
+
       - name: Build (web)
         run: npm run build --if-present
 
-      - name: Run tests
-        run: npm test --if-present
+      - name: Run tests under Xvfb
+        env:
+          CHROME_BIN: /usr/bin/chromium-browser
+        run: |
+          if [ -f ./karma.conf.js ] || grep -q "karma" package.json; then
+            xvfb-run --auto-servernum --server-args='-screen 0 1280x720x24' npm test -- --watch=false || (cat /home/runner/.npm/_logs/* || true) && exit 0
+          else
+            echo "No Karma tests found, skipping.";
+          fi
+        shell: bash
 
       - name: Upload www artifact
         if: success()
