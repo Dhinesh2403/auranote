@@ -52,7 +52,7 @@ jobs:
           # Only expose non-sensitive runtime configuration here. Keep secrets server-side or
           # use a secure proxy for client requests.
           mkdir -p ./www/assets
-          echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}' };" > ./www/assets/env.js
+          echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}', AURA_API_KEY: '${{ secrets.AURA_API_KEY }}' };" > ./www/assets/env.js
 
       - name: Configure git user
         run: |
