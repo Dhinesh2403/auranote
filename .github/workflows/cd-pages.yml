@@ -35,23 +35,23 @@ jobs:
       - name: Build (GitHub Pages)
         run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
 
-      - name: Inject runtime env (GROQ_API_KEY)
+      - name: Inject runtime env (AURA_API_KEY)
         shell: bash
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          AURA_API_KEY: ${{ secrets.AURA_API_KEY }}
         run: |
-          if [ -z "$GROQ_API_KEY" ]; then
-            echo "Missing GROQ_API_KEY secret" >&2
+          if [ -z "$AURA_API_KEY" ]; then
+            echo "Missing AURA_API_KEY secret" >&2
             exit 1
           fi
           cat > www/assets/env.js <<'EOF'
           (function () {
             window.__ENV = window.__ENV || {};
-            window.__ENV.GROQ_API_KEY = "__GROQ_API_KEY__";
+            window.__ENV.AURA_API_KEY = "__AURA_API_KEY__";
           })();
           EOF
           # Replace placeholder safely
-          sed -i "s/__GROQ_API_KEY__/${GROQ_API_KEY//\//\\/}/g" www/assets/env.js
+          sed -i "s/__AURA_API_KEY__/${AURA_API_KEY//\//\\/}/g" www/assets/env.js
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
