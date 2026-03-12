@@ -21,18 +21,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Fetch full history for git operations 1
+          persist-credentials: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: npm
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
@@ -91,5 +93,7 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Add debug APK/AAB from CI build"
-            git push
+            # Ensure push uses the workflow token and push to the branch that triggered the workflow
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+            git push origin HEAD:refs/heads/${{ github.ref_name }}
           fi
