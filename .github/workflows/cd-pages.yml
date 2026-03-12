@@ -26,20 +26,20 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
       - name: Build
-        run: npm run build -- --configuration=production
+        run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
 
-      - name: Deploy
+      - name: Configure git user
         run: |
-          # Replace the command below with your hosting provider's deploy command.
-          # For example: npm run deploy or firebase deploy --only hosting
-          npx angular-cli-ghpages --dir=dist/auranote/browser --base-href=/auranote/
+          git config --global user.name "Dhinesh2403"
+          git config --global user.email "Dhinesh2403@users.noreply.github.com"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.MY_PAT_TOKEN }}
+          publish_dir: ./www
+          publish_branch: gh-pages
+          force_orphan: true
+          user_name: Dhinesh2403
+          user_email: Dhinesh2403@users.noreply.github.com
