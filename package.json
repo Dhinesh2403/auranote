@@ -8,7 +8,7 @@
     "start": "npx ionic serve",
     "serve": "npx ionic serve",
     "serve:external": "npx ionic serve --external",
-    "build": "ng build",
+    "build": "npx ng build",
     "deploy": "echo \"No deploy configured. Replace this script with your hosting provider's deploy command (e.g. npm run deploy:netlify or firebase deploy)\"",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
