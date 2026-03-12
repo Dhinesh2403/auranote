@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - demo
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -17,17 +22,22 @@ concurrency:
 
 jobs:
   deploy:
+    # Only run on demo pushes, or when triggered by the CI workflow run for the main branch and CI succeeded
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           token: ${{ secrets.MY_PAT_TOKEN }}
           fetch-depth: 0
           persist-credentials: true
 
       - name: Force-sync main into demo
+        if: github.actor != 'github-actions[bot]'
         env:
           PAT: ${{ secrets.MY_PAT_TOKEN }}
         run: |
