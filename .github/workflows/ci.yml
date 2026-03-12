@@ -21,6 +21,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.MY_PAT_TOKEN }}
+          fetch-depth: 0
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -49,6 +52,16 @@ jobs:
           else
             echo "No Karma tests found, skipping.";
           fi
+        shell: bash
+
+      - name: Push demo branch
+        if: always()
+        run: |
+          git config user.name "Dhinesh2403"
+          git remote set-url origin https://x-access-token:${{ secrets.MY_PAT_TOKEN }}@github.com/${{ github.repository }}.git
+          git fetch origin
+          git checkout demo || git checkout -b demo origin/demo
+          git push origin demo
         shell: bash
 
       - name: Upload www artifact
