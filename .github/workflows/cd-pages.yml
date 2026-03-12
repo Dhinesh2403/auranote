@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.MY_PAT_TOKEN }}
           fetch-depth: 0
@@ -35,26 +35,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build -- --configuration=production --output-path=dist/auranote/browser --base-href "/${{ github.event.repository.name }}/"
-
-      - name: Inject Environment Variables
-        if: always()
+      # --- NEW STEP: INJECT SECRETS INTO ENV.JS ---
+      - name: Create env.js from Secrets
         run: |
-          # Write runtime env file directly into the final build output so it's available at runtime
-          mkdir -p ./dist/auranote/browser/assets
-          echo "window.__ENV = { AURA_ENDPOINT: '${{ secrets.AURA_ENDPOINT }}', AURA_API_KEY: '${{ secrets.AURA_API_KEY }}' };" > ./dist/auranote/browser/assets/env.js
+          mkdir -p src/assets
+          echo "window.__ENV = { \
+            AURA_ENDPOINT: '${{ secrets.AURA_ENDPOINT }}', \
+            AURA_API_KEY: '${{ secrets.AURA_API_KEY }}' \
+          };" > src/assets/env.js
+
+      - name: Build
+        run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
 
       - name: Configure git user
         run: |
           git config --global user.name "Dhinesh2403"
-          git config --global user.email "Dhinesh2403@users.noreply.github.com"
+          git config --global user.email "Dhinesh2403@://github.com"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.MY_PAT_TOKEN }}
-          publish_dir: ./dist/auranote/browser
+          # UPDATED: Common Angular 17+ build path. Change if your dist folder is different.
+          publish_dir: ./dist/auranote/browser 
           publish_branch: gh-pages
+          force_orphan: true
           user_name: Dhinesh2403
-          user_email: Dhinesh2403@users.noreply.github.com
+          user_email: Dhinesh2403@://github.com
