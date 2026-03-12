@@ -20,9 +20,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          token: ${{ vars.AURA_API_KEY }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -41,9 +41,11 @@ jobs:
       - name: Inject Environment Variables
         if: always()
         run: |
-          # Write runtime env file directly into the actual build output (www/assets) so it's available at runtime
+          # Do NOT write secrets into the built assets that are pushed to gh-pages.
+          # Only expose non-sensitive runtime configuration here. Keep secrets server-side or
+          # use a secure proxy for client requests.
           mkdir -p ./www/assets
-          echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}', AURA_API_KEY: '${{ vars.AURA_API_KEY }}' };" > ./www/assets/env.js
+          echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}' };" > ./www/assets/env.js
 
       - name: Configure git user
         run: |
