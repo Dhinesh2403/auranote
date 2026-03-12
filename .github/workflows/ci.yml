@@ -48,6 +48,18 @@ jobs:
       - name: Build (web)
         run: npm run build --if-present
 
+      - name: Inject Environment Variables
+        run: |
+          mkdir -p ./www/assets
+          # We create the file once with all variables from GitHub Secrets and Vars
+          cat > ./www/assets/env.js <<EOF
+          (function (window) {
+            window.__ENV = window.__ENV || {};
+            window.__ENV.AURA_ENDPOINT = '${{ vars.AURA_ENDPOINT }}';
+            window.__ENV.AURA_API_KEY = '${{ vars.AURA_API_KEY }}';
+          })(this);
+          EOF
+
       - name: Run tests under Xvfb
         env:
           CHROME_BIN: /usr/bin/chromium-browser

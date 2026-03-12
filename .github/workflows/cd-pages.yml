@@ -48,7 +48,7 @@ jobs:
           (function (window) {
             window.__ENV = window.__ENV || {};
             window.__ENV.AURA_ENDPOINT = '${{ vars.AURA_ENDPOINT }}';
-            window.__ENV.AURA_API_KEY = '${{ secrets.AURA_API_KEY }}';
+            window.__ENV.AURA_API_KEY = '${{ vars.AURA_API_KEY }}';
           })(this);
           EOF
 
