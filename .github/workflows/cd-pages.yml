@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - demo
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -17,15 +22,38 @@ concurrency:
 
 jobs:
   deploy:
+    # Only run on demo pushes, or when triggered by the CI workflow run for the main branch and CI succeeded
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
+          token: ${{ secrets.MY_PAT_TOKEN }}
           fetch-depth: 0
           persist-credentials: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Force-sync main into demo
+        if: github.actor != 'github-actions[bot]'
+        env:
+          PAT: ${{ secrets.MY_PAT_TOKEN }}
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Ensure we have the latest refs for main
+          git fetch origin main
+          # Try a regular merge first; if it fails due to conflicts, abort and retry preferring main's changes
+          if git merge origin/main --no-edit; then
+            git push origin demo
+          else
+            git merge --abort || true
+            git merge -s recursive -X theirs origin/main --no-edit
+            git push origin demo
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -38,30 +66,6 @@ jobs:
 
       - name: Build (GitHub Pages)
         run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
-
-      - name: Inject runtime env (AURA_API_KEY)
-        shell: bash
-        env:
-          AURA_API_KEY: ${{ secrets.AURA_API_KEY }}
-        run: |
-          if [ -z "$AURA_API_KEY" ]; then
-            echo "Missing AURA_API_KEY secret" >&2
-            exit 1
-          fi
-          cat > www/assets/env.js <<'EOF'
-          (function () {
-            window.__ENV = window.__ENV || {};
-            window.__ENV.AURA_API_KEY = "__AURA_API_KEY__";
-          })();
-          EOF
-          # Replace placeholder safely
-          sed -i "s/__AURA_API_KEY__/${AURA_API_KEY//\//\\/}/g" www/assets/env.js
-
-      - name: Configure git user
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        shell: bash
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
