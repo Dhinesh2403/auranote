@@ -98,10 +98,10 @@ export class Tab3Page {
       this.draft = '';
 
       console.log(window.__ENV);
-      
+
       // Use Aura chat completions directly. Ensure endpoint + key provided at runtime.
-      const endpoint = window.__ENV?.AURA_ENDPOINT || process.env?.['AURA_ENDPOINT'];
-      const token = window.__ENV?.AURA_API_KEY || process.env?.['AURA_API_KEY'];
+      const endpoint = window.__ENV?.AURA_ENDPOINT;
+      const token = window.__ENV?.AURA_API_KEY;
 
       if (!endpoint || !token) {
         this.messages = [

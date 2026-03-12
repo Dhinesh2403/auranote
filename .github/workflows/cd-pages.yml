@@ -37,6 +37,13 @@ jobs:
 
       - name: Build
         run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
+        
+      - name: Create Environment File
+        run: |
+          echo "export const environment = {
+            production: true,
+            AURA_API_KEY: '${{ secrets.AURA_API_KEY }}'
+          };" > src/environments/environment.prod.ts
 
       - name: Inject Environment Variables
         if: always()
