@@ -59,8 +59,9 @@ jobs:
         run: |
           git config user.name "Dhinesh2403"
           git remote set-url origin https://x-access-token:${{ secrets.MY_PAT_TOKEN }}@github.com/${{ github.repository }}.git
-          git fetch origin
+          git fetch origin main demo
           git checkout demo || git checkout -b demo origin/demo
+          git merge origin/main -X theirs --no-edit
           git push origin demo
         shell: bash
 
