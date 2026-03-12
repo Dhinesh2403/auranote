@@ -2,12 +2,9 @@ import { Component } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
-
-// removed aiAgentParse/GROQ dependency to simplify local testing of the chat page
-
-// Added imports for Aura chat client
 import ChatCompletionsClient from '@azure-rest/ai-inference';
 import { AzureKeyCredential } from '@azure/core-auth';
+import { environment } from 'src/environments/environment.prod';
 
 declare global {
   interface Window {
@@ -97,7 +94,9 @@ export class Tab3Page {
       ];
       this.draft = '';
 
-      console.log(window.__ENV);
+      
+
+      console.log(window.__ENV?.AURA_API_KEY);
 
       // Use Aura chat completions directly. Ensure endpoint + key provided at runtime.
       const endpoint = window.__ENV?.AURA_ENDPOINT;
