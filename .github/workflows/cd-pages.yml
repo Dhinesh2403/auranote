@@ -53,7 +53,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          personal_token: ${{ vars.AURA_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./www
           publish_branch: gh-pages
           user_name: Dhinesh2403
