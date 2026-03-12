@@ -40,6 +40,11 @@ jobs:
           sudo apt-get install -y xvfb chromium-browser chromium
         shell: bash
 
+      - name: Inject Environment Variables
+        run: |
+          echo "window.__ENV = { AURA_ENDPOINT: '${{ secrets.AURA_ENDPOINT }}', AURA_API_KEY: '${{ secrets.AURA_API_KEY }}' };" > src/assets/env.js
+        shell: bash
+
       - name: Build (web)
         run: npm run build --if-present
 
