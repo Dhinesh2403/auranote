@@ -39,9 +39,7 @@ jobs:
         run: npm run build -- --configuration=production
 
       - name: Deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_PAT_TOKEN }}
         run: |
-          # If using angular-cli-ghpages, ensure it uses the correct directory
-          # Replace 'your-repo-name' with your actual repository name
+          # Replace the command below with your hosting provider's deploy command.
+          # For example: npm run deploy or firebase deploy --only hosting
           npx angular-cli-ghpages --dir=dist/auranote/browser --base-href=/auranote/
