@@ -37,22 +37,25 @@ jobs:
 
       - name: Build
         run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
-        
-      - name: Create Environment File
-        run: |
-          echo "export const environment = {
-            production: true,
-            AURA_API_KEY: '${{ secrets.AURA_API_KEY }}'
-          };" > src/environments/environment.prod.ts
+        env:
+          AURA_API_KEY: ${{ secrets.AURA_API_KEY }}
 
       - name: Inject Environment Variables
         if: always()
         run: |
-          # Do NOT write secrets into the built assets that are pushed to gh-pages.
-          # Only expose non-sensitive runtime configuration here. Keep secrets server-side or
-          # use a secure proxy for client requests.
           mkdir -p ./www/assets
           echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}' };" > ./www/assets/env.js
+
+      - name: Inject runtime env (safety checks)
+        if: always()
+        run: |
+          mkdir -p ./www/assets
+          cat > ./www/assets/env.js <<'EOF'
+          (function () {
+            window.__ENV = window.__ENV || {};
+            window.__ENV.AURA_ENDPOINT = '${{ vars.AURA_ENDPOINT }}';
+          })();
+          EOF
 
       - name: Configure git user
         run: |
