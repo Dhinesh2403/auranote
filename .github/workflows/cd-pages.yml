@@ -2,17 +2,11 @@ name: Deploy Web (gh-pages branch)
 
 on:
   push:
-    branches:
-      - main
-  workflow_run:
-    workflows:
-      - CI
-    types:
-      - completed
+    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -22,15 +16,11 @@ concurrency:
 
 jobs:
   deploy:
-    # Only run on main pushes, or when triggered by the CI workflow run for the main branch and CI succeeded
-    if: >-
-      github.event_name != 'workflow_run' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.MY_PAT_TOKEN }}
           fetch-depth: 0
@@ -45,13 +35,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build (GitHub Pages)
-        run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
+      - name: Build
+        run: npm run build -- --configuration=production
 
-      - name: Deploy to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./www
-          publish_branch: gh-pages
-          force_orphan: true
+      - name: Deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_PAT_TOKEN }}
+        run: |
+          # If using angular-cli-ghpages, ensure it uses the correct directory
+          # Replace 'your-repo-name' with your actual repository name
+          npx angular-cli-ghpages --dir=dist/auranote/browser --base-href=/auranote/
