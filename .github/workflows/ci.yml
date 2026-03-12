@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ '**' ]
+    branches: [ 'main' ]
   pull_request:
-    branches: [ '**' ]
+    branches: [ 'main' ]
 
 permissions:
   contents: read
@@ -54,20 +54,9 @@ jobs:
           fi
         shell: bash
 
-      - name: Push demo branch
-        if: always()
-        run: |
-          git config user.name "Dhinesh2403"
-          git remote set-url origin https://x-access-token:${{ secrets.MY_PAT_TOKEN }}@github.com/${{ github.repository }}.git
-          git fetch origin main demo
-          git checkout demo || git checkout -b demo origin/demo
-          git merge origin/main -X theirs --no-edit
-          git push origin demo
-        shell: bash
-
-      - name: Upload www artifact
+      - name: Deploy
         if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: www-artifact
-          path: www
+        run: |
+          echo "Deploying main branch..."
+          npm run deploy --if-present || echo "No deploy script found; replace with your deployment command"
+        shell: bash
