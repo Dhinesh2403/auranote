@@ -22,6 +22,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.MY_PAT_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Force-sync main into demo
+        env:
+          PAT: ${{ secrets.MY_PAT_TOKEN }}
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Ensure we have the latest refs for main
+          git fetch origin main
+          # Try a regular merge first; if it fails due to conflicts, abort and retry preferring main's changes
+          if git merge origin/main --no-edit; then
+            git push origin demo
+          else
+            git merge --abort || true
+            git merge -s recursive -X theirs origin/main --no-edit
+            git push origin demo
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -34,24 +56,6 @@ jobs:
 
       - name: Build (GitHub Pages)
         run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
-
-      - name: Inject runtime env (GROQ_API_KEY)
-        shell: bash
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        run: |
-          if [ -z "$GROQ_API_KEY" ]; then
-            echo "Missing GROQ_API_KEY secret" >&2
-            exit 1
-          fi
-          cat > www/assets/env.js <<'EOF'
-          (function () {
-            window.__ENV = window.__ENV || {};
-            window.__ENV.GROQ_API_KEY = "__GROQ_API_KEY__";
-          })();
-          EOF
-          # Replace placeholder safely
-          sed -i "s/__GROQ_API_KEY__/${GROQ_API_KEY//\//\\/}/g" www/assets/env.js
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
