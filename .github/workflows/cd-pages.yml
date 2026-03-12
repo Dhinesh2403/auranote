@@ -53,9 +53,10 @@ jobs:
           cat > ./www/assets/env.js <<'EOF'
           (function () {
             window.__ENV = window.__ENV || {};
-            window.__ENV.AURA_ENDPOINT = '${{ vars.AURA_ENDPOINT }}';
+            window.__ENV.AURA_ENDPOINT = "__AURA_ENDPOINT__";
           })();
           EOF
+          sed -i "s/__AURA_ENDPOINT__/${AURA_ENDPOINT//\//\\/}/g" www/assets/env.js
 
       - name: Configure git user
         run: |
