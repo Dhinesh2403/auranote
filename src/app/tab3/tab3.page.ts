@@ -4,7 +4,7 @@ import { Storage } from '@ionic/storage-angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import ChatCompletionsClient from '@azure-rest/ai-inference';
 import { AzureKeyCredential } from '@azure/core-auth';
-import { environment } from 'src/environments/environment.prod';
+import { environment } from 'src/environments/environment';
 
 declare global {
   interface Window {
@@ -94,6 +94,7 @@ export class Tab3Page {
       ];
       this.draft = '';
 
+      console.log(environment);
       console.log(window.__ENV);
 
       // Use Aura chat completions directly. Ensure endpoint + key provided at runtime.

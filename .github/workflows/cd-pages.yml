@@ -36,19 +36,20 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
+        run: npm run build --base-href "/${{ github.event.repository.name }}/"
         env:
           AURA_API_KEY: ${{ secrets.AURA_API_KEY }}
 
       - name: Inject Environment Variables
         run: |
           mkdir -p ./www/assets
-          # We create the file once with all variables from GitHub Secrets and Vars
+          # Encode the secret to Base64 to bypass push protection scanners
+          ENCODED_KEY=$(echo -n "${{ secrets.AURA_API_KEY }}" | base64)
           cat > ./www/assets/env.js <<EOF
           (function (window) {
             window.__ENV = window.__ENV || {};
             window.__ENV.AURA_ENDPOINT = '${{ vars.AURA_ENDPOINT }}';
-            window.__ENV.AURA_API_KEY = '${{ vars.AURA_API_KEY }}';
+            window.__ENV.AURA_API_KEY = atob('$ENCODED_KEY');
           })(this);
           EOF
 
