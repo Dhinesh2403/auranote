@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ vars.AURA_API_KEY }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -53,7 +53,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          personal_token: ${{ secrets.GITHUB_TOKEN }}
+          personal_token: ${{ vars.AURA_API_KEY }}
           publish_dir: ./www
           publish_branch: gh-pages
           user_name: Dhinesh2403

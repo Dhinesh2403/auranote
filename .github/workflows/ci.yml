@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ vars.AURA_API_KEY }}
           fetch-depth: 0
 
       - name: Use Node.js
@@ -42,7 +42,7 @@ jobs:
 
       - name: Inject Environment Variables
         run: |
-          echo "window.__ENV = { AURA_ENDPOINT: '${{ secrets.AURA_ENDPOINT }}', AURA_API_KEY: '${{ secrets.AURA_API_KEY }}' };" > src/assets/env.js
+          echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}', AURA_API_KEY: '${{ vars.AURA_API_KEY }}' };" > src/assets/env.js
         shell: bash
 
       - name: Build (web)
