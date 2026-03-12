@@ -36,14 +36,14 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
+        run: npm run build -- --configuration=production --output-path=dist/auranote/browser --base-href "/${{ github.event.repository.name }}/"
 
       - name: Inject Environment Variables
         if: always()
         run: |
-          # Verify build output path from angular.json is 'www' and write env.js directly into it
-          mkdir -p ./www/assets
-          echo "window.__ENV = { AURA_ENDPOINT: '${{ secrets.AURA_ENDPOINT }}', AURA_API_KEY: '${{ secrets.AURA_API_KEY }}' };" > ./www/assets/env.js
+          # Write runtime env file directly into the final build output so it's available at runtime
+          mkdir -p ./dist/auranote/browser/assets
+          echo "window.__ENV = { AURA_ENDPOINT: '${{ secrets.AURA_ENDPOINT }}', AURA_API_KEY: '${{ secrets.AURA_API_KEY }}' };" > ./dist/auranote/browser/assets/env.js
 
       - name: Configure git user
         run: |
@@ -54,8 +54,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.MY_PAT_TOKEN }}
-          publish_dir: ./www
+          publish_dir: ./dist/auranote/browser
           publish_branch: gh-pages
-          force_orphan: true
           user_name: Dhinesh2403
           user_email: Dhinesh2403@users.noreply.github.com
