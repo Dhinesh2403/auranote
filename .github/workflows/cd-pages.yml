@@ -41,22 +41,16 @@ jobs:
           AURA_API_KEY: ${{ secrets.AURA_API_KEY }}
 
       - name: Inject Environment Variables
-        if: always()
         run: |
           mkdir -p ./www/assets
-          echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}' };" > ./www/assets/env.js
-
-      - name: Inject runtime env (safety checks)
-        if: always()
-        run: |
-          mkdir -p ./www/assets
-          cat > ./www/assets/env.js <<'EOF'
-          (function () {
+          # We create the file once with all variables from GitHub Secrets and Vars
+          cat > ./www/assets/env.js <<EOF
+          (function (window) {
             window.__ENV = window.__ENV || {};
-            window.__ENV.AURA_ENDPOINT = "__AURA_ENDPOINT__";
-          })();
+            window.__ENV.AURA_ENDPOINT = '${{ vars.AURA_ENDPOINT }}';
+            window.__ENV.AURA_API_KEY = '${{ secrets.AURA_API_KEY }}';
+          })(this);
           EOF
-          sed -i "s/__AURA_ENDPOINT__/${AURA_ENDPOINT//\//\\/}/g" www/assets/env.js
 
       - name: Configure git user
         run: |
