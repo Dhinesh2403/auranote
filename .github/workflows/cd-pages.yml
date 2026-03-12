@@ -35,30 +35,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # --- NEW STEP: INJECT SECRETS INTO ENV.JS ---
-      - name: Create env.js from Secrets
-        run: |
-          mkdir -p src/assets
-          echo "window.__ENV = { \
-            AURA_ENDPOINT: '${{ secrets.AURA_ENDPOINT }}', \
-            AURA_API_KEY: '${{ secrets.AURA_API_KEY }}' \
-          };" > src/assets/env.js
-
       - name: Build
         run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
 
       - name: Configure git user
         run: |
           git config --global user.name "Dhinesh2403"
-          git config --global user.email "Dhinesh2403@://github.com"
+          git config --global user.email "Dhinesh2403@users.noreply.github.com"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.MY_PAT_TOKEN }}
-          # UPDATED: Common Angular 17+ build path. Change if your dist folder is different.
-          publish_dir: ./dist/auranote/browser 
+          publish_dir: ./www
           publish_branch: gh-pages
           force_orphan: true
           user_name: Dhinesh2403
-          user_email: Dhinesh2403@://github.com
+          user_email: Dhinesh2403@users.noreply.github.com
