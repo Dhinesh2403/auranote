@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
+import { environment } from 'src/environments/environment.prod';
 
 type Note = {
   id: string;
@@ -80,6 +81,9 @@ export class Tab1Page {
       if (aStar !== bStar) return bStar - aStar;
       return b.updatedAt - a.updatedAt;
     });
+
+    
+    console.log(environment);
   }
 
   private async saveNotes() {
