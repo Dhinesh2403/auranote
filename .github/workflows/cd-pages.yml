@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.MY_PAT_TOKEN }}
           fetch-depth: 0
@@ -37,6 +37,13 @@ jobs:
 
       - name: Build
         run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
+
+      - name: Inject Environment Variables
+        if: always()
+        run: |
+          # Verify build output path from angular.json is 'www' and write env.js directly into it
+          mkdir -p ./www/assets
+          echo "window.__ENV = { AURA_ENDPOINT: '${{ secrets.AURA_ENDPOINT }}', AURA_API_KEY: '${{ secrets.AURA_API_KEY }}' };" > ./www/assets/env.js
 
       - name: Configure git user
         run: |
