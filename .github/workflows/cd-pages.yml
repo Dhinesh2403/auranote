@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
@@ -38,6 +38,13 @@ jobs:
       - name: Build
         run: npm run build -- --configuration=production --base-href "/${{ github.event.repository.name }}/"
 
+      - name: Inject Environment Variables
+        if: always()
+        run: |
+          # Write runtime env file directly into the actual build output (www/assets) so it's available at runtime
+          mkdir -p ./www/assets
+          echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}', AURA_API_KEY: '${{ vars.AURA_API_KEY }}' };" > ./www/assets/env.js
+
       - name: Configure git user
         run: |
           git config --global user.name "Dhinesh2403"
@@ -49,6 +56,5 @@ jobs:
           personal_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./www
           publish_branch: gh-pages
-          force_orphan: true
           user_name: Dhinesh2403
           user_email: Dhinesh2403@users.noreply.github.com
