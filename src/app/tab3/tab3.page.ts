@@ -2,9 +2,6 @@ import { Component } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import ChatCompletionsClient from '@azure-rest/ai-inference';
-import { AzureKeyCredential } from '@azure/core-auth';
-import { environment } from 'src/environments/environment';
 
 declare global {
   interface Window {
@@ -94,49 +91,18 @@ export class Tab3Page {
       ];
       this.draft = '';
 
-      let EncodedToken = 'Z2hwX1R0ak1jMmNxMFUzZEw1NHVma1lkelhHMUlrcGIxaTJIanZZeA==';
-
-      // Cross-platform base64 decode without referencing the `Buffer` symbol directly
-      // (avoids TS error in browser builds). Prefer runtime-provided key (window.__ENV.AURA_API_KEY).
-      const decodedToken = (() => {
-        try {
-          const b64 = EncodedToken;
-          const atobFn = (globalThis as any).atob;
-          if (typeof atobFn === 'function') {
-            const binary = atobFn(b64);
-            // Convert binary string to proper UTF-8 string if needed
-            try {
-              return decodeURIComponent(Array.prototype.map.call(binary, (c: string) =>
-                '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-              ).join(''));
-            } catch {
-              return binary;
-            }
-          }
-          const Buf = (globalThis as any).Buffer;
-          if (Buf && typeof Buf.from === 'function') {
-            return Buf.from(b64, 'base64').toString('utf8');
-          }
-          return '';
-        } catch {
-          return '';
-        }
-      })();
-
-      // Use runtime secret when available; otherwise use decoded embedded token.
-      const token = decodedToken;
 
       if (!window.__ENV) window.__ENV = {} as any;
 
       const endpoint = window.__ENV?.AURA_ENDPOINT;
 
-      if (!endpoint || !token) {
+      if (!endpoint) {
         this.messages = [
           ...this.messages,
           {
             id: crypto.randomUUID(),
             role: 'agent',
-            text: 'Aura is not configured. Add AURA_ENDPOINT and AURA_API_KEY to window.__ENV to enable the chat.',
+            text: 'Aura is not configured. Add AURA_ENDPOINT to window.__ENV to enable the chat.',
             createdAt: Date.now(),
           },
         ];
@@ -319,33 +285,22 @@ export class Tab3Page {
     return Math.abs(hash);
   }
 
-  // Added: helper to call Aura chat completions
+  // Updated: helper to call Aura chat completions
   private async getAuraResponse(userMessage: string): Promise<string> {
-    const endpoint = window.__ENV?.AURA_ENDPOINT;
-    const token = window.__ENV?.AURA_API_KEY;
-    if (!endpoint || !token) throw new Error('Aura endpoint/API key not configured in window.__ENV__.');
-
-    // The package default export is a factory function; call it instead of using `new`.
-    const client = ChatCompletionsClient(endpoint, new AzureKeyCredential(token));
-
-    const response = await client.path('/chat/completions').post({
-      body: {
-        messages: [
-          { role: 'system', content: 'Your name is Aura' },
-          { role: 'user', content: userMessage }
-        ],
-        model: 'meta/Llama-4-Scout-17B-16E-Instruct',
-        temperature: 0.8
-      }
+    // Call the locally-hosted proxy server which holds the secret key.
+    const res = await fetch('http://localhost:3000/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMessage }),
     });
 
-    // response.status is a string here (e.g. "200"); compare against the string and
-    // cast response.body to any so we can access the returned shape without narrow-type errors.
-    if (response.status !== '200') {
-      throw (response.body as any)?.error ?? new Error(`Aura API error ${response.status}`);
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`Aura proxy error: ${res.status} ${errBody}`);
     }
 
-    return (response.body as any)?.choices?.[0]?.message?.content ?? '';
+    const body = await res.json();
+    return body.reply ?? '';
   }
 
   // Try to interpret an agent reply and create a note or reminder when the
