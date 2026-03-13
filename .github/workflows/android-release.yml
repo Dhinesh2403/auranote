@@ -78,6 +78,25 @@ jobs:
           BUILD_TYPE: ${{ inputs.build_type || 'both' }}
         run: |
           set -e
+
+          # Debug: show current working dir, gradle and keystore presence to help diagnose missing keystore
+          echo "DEBUG: PWD=$(pwd)"
+          echo "DEBUG: Listing android directory"
+          ls -la .. || true
+          echo "DEBUG: Listing android/app"
+          ls -la app || true
+          echo "DEBUG: ANDROID_KEYSTORE_PATH=$ANDROID_KEYSTORE_PATH"
+          if [ -f "$ANDROID_KEYSTORE_PATH" ]; then
+            echo "DEBUG: Keystore file exists (verified by -f)."
+            ls -la "$(dirname "$ANDROID_KEYSTORE_PATH")" || true
+          else
+            echo "ERROR: Keystore file not found at $ANDROID_KEYSTORE_PATH" >&2
+            echo "Contents of android/app:" >&2
+            ls -la app || true
+            # fail early so CI logs show the problem
+            exit 1
+          fi
+
           if [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
             echo "Missing signing secrets (ANDROID_KEYSTORE_PASSWORD/ANDROID_KEY_ALIAS/ANDROID_KEY_PASSWORD)" >&2
             exit 1
@@ -89,14 +108,20 @@ jobs:
           export ORG_GRADLE_PROJECT_keyAlias="$ANDROID_KEY_ALIAS"
           export ORG_GRADLE_PROJECT_keyPassword="$ANDROID_KEY_PASSWORD"
 
+          ./gradlew --no-daemon --version || true
           ./gradlew --no-daemon clean
 
+          # Also pass android.injected.* properties to force Gradle to use the absolute keystore path
+          SIGNING_ARGS="-Pandroid.injected.signing.store.file=$ANDROID_KEYSTORE_PATH -Pandroid.injected.signing.store.password=$ANDROID_KEYSTORE_PASSWORD -Pandroid.injected.signing.key.alias=$ANDROID_KEY_ALIAS -Pandroid.injected.signing.key.password=$ANDROID_KEY_PASSWORD"
+
+          echo "DEBUG: SIGNING_ARGS=$SIGNING_ARGS"
+
           if [ "$BUILD_TYPE" = "apk" ] || [ "$BUILD_TYPE" = "both" ]; then
-            ./gradlew --no-daemon :app:assembleRelease
+            ./gradlew --no-daemon :app:assembleRelease $SIGNING_ARGS
           fi
 
           if [ "$BUILD_TYPE" = "aab" ] || [ "$BUILD_TYPE" = "both" ]; then
-            ./gradlew --no-daemon :app:bundleRelease
+            ./gradlew --no-daemon :app:bundleRelease $SIGNING_ARGS
           fi
 
       - name: Upload APK/AAB artifacts

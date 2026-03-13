@@ -61,10 +61,11 @@ jobs:
           sed -i '/^org.gradle.java.home/d' gradle.properties || true
 
       - name: Decode Keystore for Build
+        working-directory: android
         run: |
-          # Create the nested app/app folder structure the error is looking for
-          mkdir -p android/app/app
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/app/release.keystore
+          # Create the app folder and write the keystore where Gradle will expect it
+          mkdir -p app
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
 
       - name: Build release
         working-directory: android
@@ -78,7 +79,8 @@ jobs:
           set -e
           ./gradlew --no-daemon clean
 
-          SIGNING_ARGS="-Pandroid.injected.signing.store.file=app/release.keystore -Pandroid.injected.signing.store.password=${KEYSTORE_PASSWORD} -Pandroid.injected.signing.key.alias=${KEY_ALIAS} -Pandroid.injected.signing.key.password=${KEY_PASSWORD}"
+          # Use absolute path so Gradle daemon can access the keystore file
+          SIGNING_ARGS="-Pandroid.injected.signing.store.file=$PWD/app/release.keystore -Pandroid.injected.signing.store.password=${KEYSTORE_PASSWORD} -Pandroid.injected.signing.key.alias=${KEY_ALIAS} -Pandroid.injected.signing.key.password=${KEY_PASSWORD}"
 
           if [ "$BUILD_TYPE" = "release-apk" ]; then
             ./gradlew --no-daemon :app:assembleRelease $SIGNING_ARGS
