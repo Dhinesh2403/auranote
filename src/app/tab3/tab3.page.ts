@@ -2,12 +2,12 @@ import { Component } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { environment } from 'src/environments/environment';
 
 declare global {
   interface Window {
     __ENV?: {
       AURA_ENDPOINT?: string;
-      AURA_API_KEY?: string;
     };
   }
 }
@@ -287,12 +287,37 @@ export class Tab3Page {
 
   // Updated: helper to call Aura chat completions
   private async getAuraResponse(userMessage: string): Promise<string> {
-    // Call the locally-hosted proxy server which holds the secret key.
-    const res = await fetch('http://localhost:3000/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: userMessage }),
-    });
+    // Prefer a runtime override (window.__ENV) but fall back to the build-time env.
+    const host = (window.__ENV?.AURA_ENDPOINT as string) ?? environment.serverHost ?? '';
+    const url = `${host.replace(/\/$/, '')}/api/chat`;
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    // Note: API key removed from runtime. Authorization header not added here.
+
+    // Add a simple timeout to avoid leaving requests hanging.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ message: userMessage }),
+        signal: controller.signal,
+      });
+    } catch (err: any) {
+      if (err?.name === 'AbortError') {
+        throw new Error('Request timed out while contacting Aura.');
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!res.ok) {
       const errBody = await res.text();

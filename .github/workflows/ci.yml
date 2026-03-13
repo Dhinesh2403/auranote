@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ vars.AURA_API_KEY }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Use Node.js
@@ -42,7 +42,7 @@ jobs:
 
       - name: Inject Environment Variables
         run: |
-          echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}', AURA_API_KEY: '${{ vars.AURA_API_KEY }}' };" > src/assets/env.js
+          echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}' }" > src/assets/env.js
         shell: bash
 
       - name: Build (web)
@@ -51,13 +51,10 @@ jobs:
       - name: Inject Environment Variables
         run: |
           mkdir -p ./www/assets
-          # Encode the secret to Base64 to bypass push protection scanners
-          ENCODED_KEY=$(echo -n "${{ secrets.AURA_API_KEY }}" | base64)
           cat > ./www/assets/env.js <<EOF
           (function (window) {
             window.__ENV = window.__ENV || {};
             window.__ENV.AURA_ENDPOINT = '${{ vars.AURA_ENDPOINT }}';
-            window.__ENV.AURA_API_KEY = atob('$ENCODED_KEY');
           })(this);
           EOF
 
