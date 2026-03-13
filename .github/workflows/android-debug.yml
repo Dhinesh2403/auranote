@@ -111,12 +111,11 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add apk/
+          git add -f apk/  # Added the -f flag here
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
             git commit -m "Add release APK/AAB from CI build"
-            # Ensure push uses the workflow token and push to the branch that triggered the workflow
             git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
-            git push origin HEAD:refs/heads/${{ github.ref_name }}
+            git push origin HEAD:${{ github.ref_name }}
           fi
