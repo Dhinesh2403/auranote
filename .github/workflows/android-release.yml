@@ -60,14 +60,18 @@ jobs:
             echo "Missing ANDROID_KEYSTORE_BASE64 secret" >&2
             exit 1
           fi
+          # Create both locations (some build configs expect different paths)
           mkdir -p android/keystore
+          mkdir -p android/app
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/keystore/release.jks
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
+          chmod 600 android/keystore/release.jks android/app/release.keystore
 
       - name: Build signed release
         working-directory: android
         shell: bash
         env:
-          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/keystore/release.jks
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.keystore
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}

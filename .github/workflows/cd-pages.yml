@@ -1,4 +1,4 @@
-name: Deploy Web (gh-pages branch)
+name: CD - Deploy Web (gh-pages branch)
 
 on:
   push:
