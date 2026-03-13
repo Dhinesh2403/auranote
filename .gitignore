@@ -72,3 +72,14 @@ Thumbs.db
 # Local runtime env (never commit secrets)
 src/assets/env.local.js
 src/assets/env.local.example.js
+
+# Sensitive files and generated artifacts (ensure these are ignored)
+/apk
+/YOUR_KEYSTORE.jks
+*.jks
+android/app/build/
+android/app/*.apk
+android/app/*.aab
+src/assets/env.js
+www/assets/env.js
+www/assets/env.local.js

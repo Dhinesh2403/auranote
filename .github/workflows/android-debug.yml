@@ -1,16 +1,16 @@
-name: Android Debug (Testing)
+name: Android Release (Signed)
 
 on:
   workflow_dispatch:
     inputs:
       build_type:
-        description: "Build type (debug-apk|debug-aab)"
+        description: "Build type (release-apk|release-aab)"
         type: choice
         required: true
-        default: debug-apk
+        default: release-apk
         options:
-          - debug-apk
-          - debug-aab
+          - release-apk
+          - release-aab
 
 permissions:
   contents: write
@@ -18,7 +18,7 @@ permissions:
   id-token: write
 
 jobs:
-  android-debug:
+  android-release:
     runs-on: ubuntu-latest
 
     steps:
@@ -60,29 +60,52 @@ jobs:
         run: |
           sed -i '/^org.gradle.java.home/d' gradle.properties || true
 
-      - name: Build debug
+      - name: Decode keystore from secret
+        working-directory: android
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          set -e
+          echo "Decoding keystore into android/app/release.keystore"
+          mkdir -p app
+          echo "$KEYSTORE_BASE64" | base64 --decode > app/release.keystore
+          chmod 600 app/release.keystore
+
+      - name: Build release
         working-directory: android
         shell: bash
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -e
           ./gradlew --no-daemon clean
 
-          if [ "$BUILD_TYPE" = "debug-apk" ]; then
-            ./gradlew --no-daemon :app:assembleDebug
-          elif [ "$BUILD_TYPE" = "debug-aab" ]; then
-            ./gradlew --no-daemon :app:bundleDebug
+          SIGNING_ARGS="-Pandroid.injected.signing.store.file=app/release.keystore -Pandroid.injected.signing.store.password=${KEYSTORE_PASSWORD} -Pandroid.injected.signing.key.alias=${KEY_ALIAS} -Pandroid.injected.signing.key.password=${KEY_PASSWORD}"
+
+          if [ "$BUILD_TYPE" = "release-apk" ]; then
+            ./gradlew --no-daemon :app:assembleRelease $SIGNING_ARGS
+          elif [ "$BUILD_TYPE" = "release-aab" ]; then
+            ./gradlew --no-daemon :app:bundleRelease $SIGNING_ARGS
           fi
 
-      - name: Copy APK to apk folder
+      - name: Wipe keystore from runner
+        working-directory: android
+        if: always()
+        run: |
+          shred -u app/release.keystore || rm -f app/release.keystore || true
+
+      - name: Copy release artifact to apk folder
         shell: bash
         run: |
           mkdir -p apk
-          if [ "${{ inputs.build_type }}" = "debug-apk" ]; then
-            cp android/app/build/outputs/apk/debug/*.apk apk/app-debug.apk
-          elif [ "${{ inputs.build_type }}" = "debug-aab" ]; then
-            cp android/app/build/outputs/bundle/debug/*.aab apk/app-debug.aab
+          if [ "${{ inputs.build_type }}" = "release-apk" ]; then
+            cp android/app/build/outputs/apk/release/*.apk apk/app-release.apk || true
+          elif [ "${{ inputs.build_type }}" = "release-aab" ]; then
+            cp android/app/build/outputs/bundle/release/*.aab apk/app-release.aab || true
           fi
 
       - name: Commit and push APK
@@ -96,7 +119,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Add debug APK/AAB from CI build"
+            git commit -m "Add release APK/AAB from CI build"
             # Ensure push uses the workflow token and push to the branch that triggered the workflow
             git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
             git push origin HEAD:refs/heads/${{ github.ref_name }}

@@ -38,7 +38,7 @@ jobs:
       - name: Build
         run: npm run build -- --base-href "/${{ github.event.repository.name }}/"
         env:
-          AURA_ENDPOINT: ${{ vars.AURA_ENDPOINT }}
+          SERVER_HOST: ${{ vars.SERVER_HOST }}
 
       - name: Inject & Disguise Secret
         run: |
@@ -46,7 +46,7 @@ jobs:
           cat > ./www/assets/env.js <<EOF
           (function (window) {
             window.__ENV = window.__ENV || {};
-            window.__ENV.AURA_ENDPOINT = '${{ vars.AURA_ENDPOINT }}';
+            window.__ENV.SERVER_HOST = '${{ vars.SERVER_HOST }}';
           })(this);
           EOF
 
