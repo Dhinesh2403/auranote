@@ -42,7 +42,7 @@ jobs:
 
       - name: Inject Environment Variables
         run: |
-          echo "window.__ENV = { AURA_ENDPOINT: '${{ vars.AURA_ENDPOINT }}' }" > src/assets/env.js
+          echo "window.__ENV = { SERVER_HOST: '${{ vars.SERVER_HOST }}' }" > src/assets/env.js
         shell: bash
 
       - name: Build (web)
@@ -54,7 +54,7 @@ jobs:
           cat > ./www/assets/env.js <<EOF
           (function (window) {
             window.__ENV = window.__ENV || {};
-            window.__ENV.AURA_ENDPOINT = '${{ vars.AURA_ENDPOINT }}';
+            window.__ENV.SERVER_HOST = '${{ vars.SERVER_HOST }}';
           })(this);
           EOF
 

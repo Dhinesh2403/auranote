@@ -4,14 +4,6 @@ import { Storage } from '@ionic/storage-angular';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { environment } from 'src/environments/environment';
 
-declare global {
-  interface Window {
-    __ENV?: {
-      AURA_ENDPOINT?: string;
-    };
-  }
-}
-
 type ChatMessage = {
   id: string;
   role: 'user' | 'agent';
@@ -91,18 +83,14 @@ export class Tab3Page {
       ];
       this.draft = '';
 
-
-      if (!window.__ENV) window.__ENV = {} as any;
-
-      const endpoint = window.__ENV?.AURA_ENDPOINT;
-
-      if (!endpoint) {
+      const host = environment.serverHost;
+      if (!host) {
         this.messages = [
           ...this.messages,
           {
             id: crypto.randomUUID(),
             role: 'agent',
-            text: 'Aura is not configured. Add AURA_ENDPOINT to window.__ENV to enable the chat.',
+            text: 'Aura is not configured. Set environment.serverHost (build-time) to enable the chat.',
             createdAt: Date.now(),
           },
         ];
@@ -287,8 +275,8 @@ export class Tab3Page {
 
   // Updated: helper to call Aura chat completions
   private async getAuraResponse(userMessage: string): Promise<string> {
-    // Prefer a runtime override (window.__ENV) but fall back to the build-time env.
-    const host = (window.__ENV?.AURA_ENDPOINT as string) ?? environment.serverHost ?? '';
+    // Use the build-time configured server host.
+    const host = environment.serverHost ?? '';
     const url = `${host.replace(/\/$/, '')}/api/chat`;
 
     const headers: Record<string, string> = {
@@ -296,7 +284,8 @@ export class Tab3Page {
       'Accept': 'application/json',
     };
 
-    // Note: API key removed from runtime. Authorization header not added here.
+    // No runtime API key or endpoint are read from window.__ENV. Authorization
+    // should be handled by your proxy/server if required.
 
     // Add a simple timeout to avoid leaving requests hanging.
     const controller = new AbortController();
