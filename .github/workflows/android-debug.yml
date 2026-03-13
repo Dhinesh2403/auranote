@@ -60,17 +60,11 @@ jobs:
         run: |
           sed -i '/^org.gradle.java.home/d' gradle.properties || true
 
-      - name: Decode keystore from secret
-        working-directory: android
-        shell: bash
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Decode Keystore for Build
         run: |
-          set -e
-          echo "Decoding keystore into android/app/release.keystore"
-          mkdir -p app
-          echo "$KEYSTORE_BASE64" | base64 --decode > app/release.keystore
-          chmod 600 app/release.keystore
+          # Create the nested app/app folder structure the error is looking for
+          mkdir -p android/app/app
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/app/release.keystore
 
       - name: Build release
         working-directory: android
